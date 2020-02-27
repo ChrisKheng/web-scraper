@@ -21,19 +21,17 @@ public class App {
     
         List<String> seeds = getURLSeeds();
 
-        // TreeSet is NOT thread safe!!!
+        // TreeSet and LinkedList is NOT thread safe!!!
         // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
         // for how to ensure thread safety using TreeSet.
         TreeSet<String> tree = new TreeSet<>();
         List<String> buffer = new LinkedList<>();
 
-        // Turn off htmlunit's logger 
-        // Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
-
         logger.info("Starting........ =D");
 
         // Spawn and start crawler thread
-        Crawler crawler = new Crawler(tree, buffer);
+        // seeds can be split into different portion and give to the individual threads.
+        Crawler crawler = new Crawler(seeds, tree, buffer);
         crawler.start();
         try {
             crawler.join();
@@ -46,7 +44,6 @@ public class App {
 
         // Write all urls from tree to disk
         writeToDisk(tree);
-
         logger.info("Done........ =D");
     }
 
@@ -58,6 +55,7 @@ public class App {
         return bufReader.lines().collect(Collectors.toList());
     }
 
+    // Write the urls to the disk.
     public static void writeToDisk(TreeSet<String> tree) {
         try {
             File file = new File("./result.txt");

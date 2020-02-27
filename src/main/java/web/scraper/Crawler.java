@@ -10,15 +10,19 @@ import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 /**
- * Represents a Crawling Thread (CT) which crawls the internet and scrape urls and their html contents.
+ * Represents a Crawling Thread (CT) which crawls the internet and scrape urls
+ * and their html contents.
  */
 public class Crawler extends Thread {
     // Not thread safe so every crawler needs to have its own client.
+    // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
     private TreeSet tree;
     private List<String> buffer;
+    private List<String> seeds;
 
-    public Crawler(TreeSet tree, List<String> buffer) {
+    public Crawler(List<String> seeds, TreeSet tree, List<String> buffer) {
+        this.seeds = seeds;
         this.tree = tree;
         this.buffer = buffer;
 
@@ -30,30 +34,31 @@ public class Crawler extends Thread {
 
     @Override
     public void run() {
-        try {
-            // Gets the html page.
-            String searchUrl = "https://en.wikipedia.org/wiki/Main_Page";
-            HtmlPage page = client.getPage(searchUrl);
+        for (String searchUrl : seeds) {
+            try {
+                // Gets the html page.
+                HtmlPage page = client.getPage(searchUrl);
 
-            // Extracts urls in all the <a> tags.
-            List<Object> anchors = (List<Object>) page.getByXPath("//a");
-            List<String> urls = anchors.stream()
-                .map(anchor -> {
+                // Extracts urls in all the <a> tags.
+                List<Object> anchors = (List<Object>) page.getByXPath("//a");
+                List<String> urls = anchors.stream().map(anchor -> {
                     String relativePath = ((HtmlAnchor) anchor).getHrefAttribute();
                     try {
+                        // Returns the absolute url of the relative url given.
                         return page.getFullyQualifiedUrl(relativePath).toString();
                     } catch (MalformedURLException e) {
                         return "";
-                    }})
-                .filter(url -> !url.equals(""))
-                .collect(Collectors.toList());
+                    }
+                }).filter(url -> !url.equals("")).collect(Collectors.toList());
 
-            writeToBuffer(urls);
-       } catch (Exception e) {
-            e.printStackTrace();
+                writeToBuffer(urls);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    // Write the urls to the buffer if the tree does not already contain the url given.
     public void writeToBuffer(List<String> urls) {
         urls.forEach(url -> {
             if (tree.contains(url)) {
