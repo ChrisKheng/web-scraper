@@ -3,46 +3,73 @@
  */
 package web.scraper;
 
-import java.io.FileWriter;
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.logging.*;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 public class App {
-    // Template code for web scrapper
+
     public void run() {
-        // Turn off htmlunit's logger 
-        Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
+        Logger logger = Logger.getLogger("App");
+    
+        List<String> seeds = getURLSeeds();
 
-        try (final WebClient webClient = new WebClient()) {
-            System.out.println("Start scrapping");
+        // TreeSet and LinkedList is NOT thread safe!!!
+        // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
+        // for how to ensure thread safety using TreeSet.
+        TreeSet<String> tree = new TreeSet<>();
+        List<String> buffer = new LinkedList<>();
 
-            final HtmlPage page = webClient.getPage("http://htmlunit.sourceforge.net");
-            assert "HtmlUnit - Welcome to HtmlUnit".equals(page.getTitleText());
+        logger.info("Starting........ =D");
 
-            final String pageAsXml = page.asXml();
-            assert pageAsXml.contains("<body class=\"composite\">") == true;
-
-            File file = new File("./result.txt");
-            file.createNewFile();
-            if (file.createNewFile()) {
-                System.out.println("File is created!");
-            } else {
-                System.out.println("File already exists.");
-            }
-
-            FileWriter writer = new FileWriter(file);
-            writer.write(pageAsXml);
-            writer.close();
-
-            System.out.println("Done!");
-            // System.out.println(pageAsXml);
-        } catch (Exception e) {
-            System.err.print(e.getStackTrace());
+        // Spawn and start crawler thread
+        // seeds can be split into different portion and give to the individual threads.
+        Crawler crawler = new Crawler(seeds, tree, buffer);
+        crawler.start();
+        try {
+            crawler.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        System.out.println("Done writing result to file!");
+        writeToDisk(tree);
+        logger.info("Done........ =D");
+    }
+
+    // Read urls from seed file.
+    public static List<String> getURLSeeds() {
+        InputStreamReader reader = new InputStreamReader(System.in);
+        BufferedReader bufReader = new BufferedReader(reader);
+
+        return bufReader.lines().collect(Collectors.toList());
+    }
+
+    // Write the urls to the disk.
+    public static void writeToDisk(TreeSet<String> tree) {
+        try {
+            File file = new File("./result.txt");
+            file.createNewFile();
+
+            FileWriter writer = new FileWriter(file);
+            tree.forEach(url -> {
+                try {
+                    writer.write(url);
+                    writer.write("\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

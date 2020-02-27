@@ -1,0 +1,1 @@
+./gradlew run < seed.txt

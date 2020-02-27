@@ -33,3 +33,7 @@ application {
     // Define the main class for the application.
     mainClassName = 'web.scraper.App'
 }
+
+run {
+    standardInput = System.in
+}
