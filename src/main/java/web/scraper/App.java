@@ -12,11 +12,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 public class App {
 
     public void run() {
-        getURLSeeds();
+        Logger logger = Logger.getLogger("App");
+    
+        List<String> seeds = getURLSeeds();
 
         // TreeSet is NOT thread safe!!!
         // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
@@ -27,7 +30,7 @@ public class App {
         // Turn off htmlunit's logger 
         // Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
 
-        System.out.println("Starting...... :P");
+        logger.info("Starting........ =D");
 
         // Spawn and start crawler thread
         Crawler crawler = new Crawler(tree, buffer);
@@ -44,18 +47,15 @@ public class App {
         // Write all urls from tree to disk
         writeToDisk(tree);
 
-       System.out.println("Done........... :P");
+        logger.info("Done........ =D");
     }
 
-    // Work in progress
+    // Read urls from seed file.
     public static List<String> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
 
-        List<String> seeds = bufReader.lines().collect(Collectors.toList());
-        seeds.forEach(x -> System.out.print(x));
-
-        return seeds;
+        return bufReader.lines().collect(Collectors.toList());
     }
 
     public static void writeToDisk(TreeSet<String> tree) {
