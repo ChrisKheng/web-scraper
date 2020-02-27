@@ -17,11 +17,11 @@ public class Crawler extends Thread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
-    private TreeSet tree;
+    private TreeSet<String> tree;
     private List<String> buffer;
     private List<String> seeds;
 
-    public Crawler(List<String> seeds, TreeSet tree, List<String> buffer) {
+    public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
         this.seeds = seeds;
         this.tree = tree;
         this.buffer = buffer;
@@ -52,6 +52,10 @@ public class Crawler extends Thread {
                 }).filter(url -> !url.equals("")).collect(Collectors.toList());
 
                 writeToBuffer(urls);
+
+                // Write urls from buffer to tree
+                // To be removed later as this is supposed to be done by the Index Building Thread.
+                tree.addAll(buffer);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -62,6 +66,7 @@ public class Crawler extends Thread {
     public void writeToBuffer(List<String> urls) {
         urls.forEach(url -> {
             if (tree.contains(url)) {
+                // skip the current iteration
                 return;
             }
 

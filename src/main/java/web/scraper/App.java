@@ -39,10 +39,6 @@ public class App {
             e.printStackTrace();
         }
 
-        // Write urls from buffer to tree
-        tree.addAll(buffer);
-
-        // Write all urls from tree to disk
         writeToDisk(tree);
         logger.info("Done........ =D");
     }
