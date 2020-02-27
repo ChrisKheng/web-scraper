@@ -3,46 +3,28 @@
  */
 package web.scraper;
 
-import java.io.FileWriter;
-import java.io.File;
-import java.util.logging.*;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import java.util.LinkedList;
+import java.util.List;
 
 public class App {
-    // Template code for web scrapper
+
     public void run() {
+        List<String> buffer = new LinkedList<>();
+
         // Turn off htmlunit's logger 
-        Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
+        // Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
 
-        try (final WebClient webClient = new WebClient()) {
-            System.out.println("Start scrapping");
+        System.out.println("Starting......");
+        Crawler crawler = new Crawler();
+        crawler.start();
 
-            final HtmlPage page = webClient.getPage("http://htmlunit.sourceforge.net");
-            assert "HtmlUnit - Welcome to HtmlUnit".equals(page.getTitleText());
-
-            final String pageAsXml = page.asXml();
-            assert pageAsXml.contains("<body class=\"composite\">") == true;
-
-            File file = new File("./result.txt");
-            file.createNewFile();
-            if (file.createNewFile()) {
-                System.out.println("File is created!");
-            } else {
-                System.out.println("File already exists.");
-            }
-
-            FileWriter writer = new FileWriter(file);
-            writer.write(pageAsXml);
-            writer.close();
-
-            System.out.println("Done!");
-            // System.out.println(pageAsXml);
-        } catch (Exception e) {
-            System.err.print(e.getStackTrace());
+        try {
+            crawler.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        System.out.println("Done writing result to file!");
+        System.out.println("Done...........");
     }
 
     public static void main(String[] args) {
