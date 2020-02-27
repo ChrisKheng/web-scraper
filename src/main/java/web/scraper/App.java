@@ -3,28 +3,79 @@
  */
 package web.scraper;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class App {
 
     public void run() {
+        getURLSeeds();
+
+        // TreeSet is NOT thread safe!!!
+        // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
+        // for how to ensure thread safety using TreeSet.
+        TreeSet<String> tree = new TreeSet<>();
         List<String> buffer = new LinkedList<>();
 
         // Turn off htmlunit's logger 
         // Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.OFF); 
 
-        System.out.println("Starting......");
-        Crawler crawler = new Crawler();
-        crawler.start();
+        System.out.println("Starting...... :P");
 
+        // Spawn and start crawler thread
+        Crawler crawler = new Crawler(tree, buffer);
+        crawler.start();
         try {
             crawler.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Done...........");
+        // Write urls from buffer to tree
+        tree.addAll(buffer);
+
+        // Write all urls from tree to disk
+        writeToDisk(tree);
+
+       System.out.println("Done........... :P");
+    }
+
+    // Work in progress
+    public static List<String> getURLSeeds() {
+        InputStreamReader reader = new InputStreamReader(System.in);
+        BufferedReader bufReader = new BufferedReader(reader);
+
+        List<String> seeds = bufReader.lines().collect(Collectors.toList());
+        seeds.forEach(x -> System.out.print(x));
+
+        return seeds;
+    }
+
+    public static void writeToDisk(TreeSet<String> tree) {
+        try {
+            File file = new File("./result.txt");
+            file.createNewFile();
+
+            FileWriter writer = new FileWriter(file);
+            tree.forEach(url -> {
+                try {
+                    writer.write(url);
+                    writer.write("\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

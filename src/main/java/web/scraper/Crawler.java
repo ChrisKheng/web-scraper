@@ -1,10 +1,8 @@
 package web.scraper;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -17,8 +15,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Crawler extends Thread {
     // Not thread safe so every crawler needs to have its own client.
     private WebClient client;
+    private TreeSet tree;
+    private List<String> buffer;
 
-    public Crawler() {
+    public Crawler(TreeSet tree, List<String> buffer) {
+        this.tree = tree;
+        this.buffer = buffer;
+
+        // Creates a new web client to visit the internet.
         this.client = new WebClient();
         client.getOptions().setCssEnabled(false);
         client.getOptions().setJavaScriptEnabled(false);
@@ -44,23 +48,19 @@ public class Crawler extends Thread {
                 .filter(url -> !url.equals(""))
                 .collect(Collectors.toList());
 
-            // Write all urls
-            File file = new File("./result.txt");
-            file.createNewFile();
-
-            FileWriter writer = new FileWriter(file);
-            urls.forEach(url -> {
-                try {
-                    writer.write(url);
-                    writer.write("\n");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            writer.close();
-
-        } catch (Exception e) {
+            writeToBuffer(urls);
+       } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void writeToBuffer(List<String> urls) {
+        urls.forEach(url -> {
+            if (tree.contains(url)) {
+                return;
+            }
+
+            buffer.add(url);
+        });
     }
 }
