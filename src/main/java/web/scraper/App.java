@@ -31,8 +31,12 @@ public class App {
 
         // Spawn and start crawler thread
         // seeds can be split into different portion and give to the individual threads.
-        Crawler crawler = new Crawler(seeds, tree, buffer);
-        crawler.start();
+        // Crawler crawler = new Crawler(seeds, tree, buffer);
+        // crawler.start();
+        RecursiveCrawler crawler = new RecursiveCrawler(tree, buffer); 
+        for (String seed : seeds) {
+            crawler.run(seed);
+        }
         try {
             crawler.join();
         } catch (InterruptedException e) {

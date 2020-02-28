@@ -56,6 +56,7 @@ public class Crawler extends Thread {
                 // Write urls from buffer to tree
                 // To be removed later as this is supposed to be done by the Index Building Thread.
                 tree.addAll(buffer);
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -65,11 +66,10 @@ public class Crawler extends Thread {
     // Write the urls to the buffer if the tree does not already contain the url given.
     public void writeToBuffer(List<String> urls) {
         urls.forEach(url -> {
-            if (tree.contains(url)) {
+            if (tree.contains(url) || buffer.contains(url)) {
                 // skip the current iteration
                 return;
             }
-
             buffer.add(url);
         });
     }
