@@ -1,5 +1,10 @@
 package web.scraper;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class IndexURLTree {
 
     public IndexURLTree() {
@@ -23,8 +28,26 @@ public class IndexURLTree {
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
-    private void searchForItem(String filename, String key) {
+    private String searchForItem(String filename, String key) {
         //TODO: This method will search for the key in the filename, and return the next url to go to.
+        try {
+            if (key.contains(".html")) { // reached the end of the file name
+                return "";
+            }
+            File file = new File(filename);
+            FileReader fr = new FileReader(file);
+            BufferedReader br = new BufferedReader(fr);
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains(key)) { // key-value pair exists and found
+                    String[] tokens = line.split(",");
+                    return tokens[1];
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null; // key-value pair does not exist
     }
 
     private void addItemToIndex(String filename, String key, String value) {
