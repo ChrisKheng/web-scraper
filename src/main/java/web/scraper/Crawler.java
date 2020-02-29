@@ -8,21 +8,23 @@ import java.util.stream.Collectors;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Represents a Crawling Thread (CT) which crawls the internet and scrape urls
  * and their html contents.
  */
-public class Crawler extends Thread {
+public class Crawler implements Runnable {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
     private TreeSet<String> tree;
     private List<String> buffer;
-    private List<String> seeds;
+    private ConcurrentLinkedQueue<String> queue;
+    private long end;
 
     public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
-        this.seeds = seeds;
+        this.queue = new ConcurrentLinkedQueue(seeds);
         this.tree = tree;
         this.buffer = buffer;
 
@@ -30,12 +32,18 @@ public class Crawler extends Thread {
         this.client = new WebClient();
         client.getOptions().setCssEnabled(false);
         client.getOptions().setJavaScriptEnabled(false);
+        
+        long start = System.currentTimeMillis();
+        this.end = start + 30*1000; // 30 seconds run time
     }
 
     @Override
     public void run() {
-        for (String searchUrl : seeds) {
+        while(!queue.isEmpty() && System.currentTimeMillis() < end) {
             try {
+                // Retrives and removes head of queue
+                String searchUrl = queue.poll();
+                
                 // Gets the html page.
                 HtmlPage page = client.getPage(searchUrl);
 
@@ -51,11 +59,11 @@ public class Crawler extends Thread {
                     }
                 }).filter(url -> !url.equals("")).collect(Collectors.toList());
 
-                writeToBuffer(urls);
+                processUrls(urls);
 
                 // Write urls from buffer to tree
                 // To be removed later as this is supposed to be done by the Index Building Thread.
-                tree.addAll(buffer);
+                //tree.addAll(buffer);
                 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -64,13 +72,15 @@ public class Crawler extends Thread {
     }
 
     // Write the urls to the buffer if the tree does not already contain the url given.
-    public void writeToBuffer(List<String> urls) {
+    public synchronized void processUrls(List<String> urls) {
         urls.forEach(url -> {
-            if (tree.contains(url) || buffer.contains(url)) {
+            if (tree.contains(url)) {
                 // skip the current iteration
                 return;
             }
             buffer.add(url);
+            tree.add(url); // have this here for now
+            queue.add(url);
         });
     }
 }

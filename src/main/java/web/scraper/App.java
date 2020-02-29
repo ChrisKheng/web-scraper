@@ -25,26 +25,43 @@ public class App {
         // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
         // for how to ensure thread safety using TreeSet.
         TreeSet<String> tree = new TreeSet<>();
-        List<String> buffer = new LinkedList<>();
+        List<String> buffer1 = new LinkedList<>();
+        List<String> buffer2 = new LinkedList<>();
 
         logger.info("Starting........ =D");
+        
+        Crawler crawler1 = new Crawler(seeds.subList(0,1), tree, buffer1);
+        Crawler crawler2 = new Crawler(seeds.subList(1,2), tree, buffer2);
+        
+        Thread t11 = new Thread(crawler1);
+        Thread t12 = new Thread(crawler1);
+        Thread t21 = new Thread(crawler2);
+        Thread t22 = new Thread(crawler2);
+        
+        t11.start();
+        t12.start();
+        t21.start();
+        t22.start();
+        
+        
 
         // Spawn and start crawler thread
         // seeds can be split into different portion and give to the individual threads.
         // Crawler crawler = new Crawler(seeds, tree, buffer);
         // crawler.start();
-        RecursiveCrawler crawler = new RecursiveCrawler(tree, buffer); 
-        for (String seed : seeds) {
-            crawler.run(seed);
-        }
+
         try {
-            crawler.join();
+            t11.join();
+            t12.join();
+            t21.join();
+            t22.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         writeToDisk(tree);
         logger.info("Done........ =D");
+        System.out.println(tree.size());
     }
 
     // Read urls from seed file.
