@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
@@ -18,7 +19,9 @@ public class App {
 
     public void run() {
         Logger logger = Logger.getLogger("App");
-    
+        // The following 2 line removes log from the following 2 sources.
+        //java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+        //java.util.logging.Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
         List<String> seeds = getURLSeeds();
 
         // TreeSet and LinkedList is NOT thread safe!!!
@@ -32,18 +35,23 @@ public class App {
         
         Crawler crawler1 = new Crawler(seeds.subList(0,1), tree, buffer1);
         Crawler crawler2 = new Crawler(seeds.subList(1,2), tree, buffer2);
-        
+
+        IndexBuilder indexBuilder = new IndexBuilder(tree, buffer1);
+
         Thread t11 = new Thread(crawler1);
         Thread t12 = new Thread(crawler1);
         Thread t21 = new Thread(crawler2);
         Thread t22 = new Thread(crawler2);
+
         
         t11.start();
         t12.start();
         t21.start();
         t22.start();
-        
-        
+
+
+        Thread ib1 = new Thread(indexBuilder);
+        ib1.start();
 
         // Spawn and start crawler thread
         // seeds can be split into different portion and give to the individual threads.
@@ -68,7 +76,6 @@ public class App {
     public static List<String> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
-
         return bufReader.lines().collect(Collectors.toList());
     }
 
