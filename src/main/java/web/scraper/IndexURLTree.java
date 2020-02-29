@@ -1,9 +1,12 @@
 package web.scraper;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 public class IndexURLTree {
 
@@ -52,6 +55,15 @@ public class IndexURLTree {
 
     private void addItemToIndex(String filename, String key, String value) {
         //TODO: This method adds a key and value pair into the file to be used in the future.
+        String pair = key + "," + value;
+        try {
+            //TODO: a way to sort the index file for faster search
+            FileWriter fw = new FileWriter(filename, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.append(pair);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
