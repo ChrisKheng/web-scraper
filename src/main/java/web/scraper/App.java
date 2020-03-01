@@ -16,39 +16,42 @@ import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
 public class App {
+    private static Logger logger;
+    private static TreeSet<String> tree;
 
-    public void run() {
-        Logger logger = Logger.getLogger("App");
-        // The following 2 line removes log from the following 2 sources.
-        //java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
-        //java.util.logging.Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
+    public App(Logger logger) {
+        App.logger = logger;
+        App.tree = new TreeSet<>();
+    }
+
+    public void run() throws Exception {
+        logger.info("Starting........ =D");
+
         List<String> seeds = getURLSeeds();
+        List<List<String>> subLists = splitList(seeds, 4);
 
         // TreeSet and LinkedList is NOT thread safe!!!
         // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
         // for how to ensure thread safety using TreeSet.
-        TreeSet<String> tree = new TreeSet<>();
         List<String> buffer1 = new LinkedList<>();
         List<String> buffer2 = new LinkedList<>();
 
-        logger.info("Starting........ =D");
-        
-        Crawler crawler1 = new Crawler(seeds.subList(0,1), tree, buffer1);
-        Crawler crawler2 = new Crawler(seeds.subList(1,2), tree, buffer2);
+        Crawler crawler1 = new Crawler(subLists.get(0), tree, buffer1);
+        Crawler crawler2 = new Crawler(subLists.get(1), tree, buffer1);
+        Crawler crawler3 = new Crawler(subLists.get(2), tree, buffer2);
+        Crawler crawler4 = new Crawler(subLists.get(3), tree, buffer2);
 
         IndexBuilder indexBuilder = new IndexBuilder(tree, buffer1);
 
         Thread t11 = new Thread(crawler1);
-        Thread t12 = new Thread(crawler1);
-        Thread t21 = new Thread(crawler2);
-        Thread t22 = new Thread(crawler2);
+        Thread t12 = new Thread(crawler2);
+        Thread t21 = new Thread(crawler3);
+        Thread t22 = new Thread(crawler4);
 
-        
         t11.start();
         t12.start();
         t21.start();
         t22.start();
-
 
         Thread ib1 = new Thread(indexBuilder);
         ib1.start();
@@ -64,19 +67,40 @@ public class App {
             t21.join();
             t22.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            System.err.print("Error occur!");
         }
-
-        writeToDisk(tree);
-        logger.info("Done........ =D");
-        System.out.println(tree.size());
     }
 
     // Read urls from seed file.
-    public static List<String> getURLSeeds() {
+    public List<String> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
         return bufReader.lines().collect(Collectors.toList());
+    }
+
+    public static List<List<String>> splitList(List<String> list, int numPortions) {
+        int portionSize = list.size() / numPortions;
+
+        List<List<String>> result = new LinkedList<>();
+        List<String> temp = new LinkedList<>();
+        int count = 0;
+        int currNumPortions = 0;
+        
+        for (String url : list) {
+            temp.add(url);
+            count++;
+
+            if (count == portionSize && currNumPortions < numPortions - 1) {
+                result.add(temp);
+                temp = new LinkedList<>();
+                currNumPortions++;
+                count = 0;
+            }
+        }
+        result.add(temp);
+
+        return result;
     }
 
     // Write the urls to the disk.
@@ -101,6 +125,18 @@ public class App {
     }
 
     public static void main(String[] args) {
-        new App().run();
+        try {
+            // The following 2 line removes log from the following 2 sources.
+            java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+            java.util.logging.Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
+
+            new App(Logger.getLogger("App")).run();
+        } catch (Exception e) {
+            System.err.print("Error occur!");
+        } finally {
+            writeToDisk(tree);
+            logger.info("Done........ =D");
+            System.out.println(tree.size());
+        }
     }
 }
