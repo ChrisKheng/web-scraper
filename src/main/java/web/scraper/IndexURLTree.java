@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class IndexURLTree {
 
@@ -24,13 +26,48 @@ public class IndexURLTree {
         // If createMissingDirectory is true, it will add the url into all the indexes it passes through,
         // and return a filename that the html content should be saved as.
 
+        // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
+        // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
+        // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
+
+        // We can try to split by // first, then by '.' and '/'
+        // Shall use string split for now, but can switch to guava splitter if too slow
+
         return null;
+    }
+
+    // This method takes in a url and breaks it down into 3 parts
+    // Header, webpage, and extension
+    // Header is the http://
+    // webpage is abc.com
+    // extension is /page1/2/3
+    private ArrayList<String[]> breakdownUrl(String url) {
+
+        // Split url by the ://
+        // So we go from http://abc.com/a/b/c to an array with the following [http, abc.com/a/b/c]
+        String[] url_first_split = url.split("://", 2);
+        String[] header = new String[1];
+        header[0] = url_first_split[0];
+
+        // Split url without header by /
+        // This separates out the website address, and the extension behind.
+        // abc.com/a/b/c --> [abc.com, a/b/c]
+        String[] url_second_split = url_first_split[1].split("/", 2);
+
+        // abc.com --> [abc, com]
+        String[] webpage = url_second_split[0].split("\\.");
+
+        // a/b/c --> [a, b, c]
+        String[] extension = url_second_split[1].split("/");
+
+        return new ArrayList<>(Arrays.asList(header, webpage, extension));
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
     private String searchForItem(String filename, String key) {
         //TODO: This method will search for the key in the filename, and return the next url to go to.
         try {
+            // TODO: Shouldn't we check the value? not the key?
             if (key.contains(".html")) { // reached the end of the file name
                 return "";
             }
@@ -38,6 +75,9 @@ public class IndexURLTree {
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
             String line;
+            // TODO: Is looping the best way to do this? How expensive is string comparison
+            // Could it be faster to put everything in hashmap and just search it?
+            // Or binary search after putting things in a list?
             while ((line = br.readLine()) != null) {
                 if (line.contains(key)) { // key-value pair exists and found
                     String[] tokens = line.split(",");
@@ -52,6 +92,27 @@ public class IndexURLTree {
 
     private void addItemToIndex(String filename, String key, String value) {
         //TODO: This method adds a key and value pair into the file to be used in the future.
+    }
+
+    public static void main(String[] args) {
+        IndexURLTree IUT = new IndexURLTree();
+        // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
+        // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
+        // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
+        IUT.testBreakdownUrl("http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html");
+        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
+        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
+    }
+
+    public void testBreakdownUrl(String url) {
+        ArrayList<String[]> breakdown = breakdownUrl(url);
+        String[] header = breakdown.get(0);
+        String[] webpage = breakdown.get(1);
+        String[] extension = breakdown.get(2);
+        System.out.println(url);
+        System.out.println(Arrays.toString(header));
+        System.out.println(Arrays.toString(webpage));
+        System.out.println(Arrays.toString(extension));
     }
 
 }
