@@ -30,9 +30,49 @@ public class IndexURLTree {
         // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
         // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
 
-        // We can try to split by // first, then by '.' and '/'
         // Shall use string split for now, but can switch to guava splitter if too slow
+        ArrayList<String[]> breakdown = breakdownUrl(url);
+        String[] header = breakdown.get(0);
+        String[] webpage = breakdown.get(1);
+        String[] extension = breakdown.get(2);
 
+        // THE FOLLOWING IS JUST PSEUDO CODE!!! NOT WORKING YET.
+        String currentIndexFile = ""; // Add in first index file here
+        for (int i = 0; i < header.length; i++) {
+            currentIndexFile = searchForItem(currentIndexFile, header[i]);
+            if (currentIndexFile == null) {
+                if (createMissingDirectory) {
+                    // Add code to create the directory
+                } else {
+                    //exit
+                }
+                // Exit
+            }
+        }
+
+        for (int i = 0; i < webpage.length; i++) {
+            currentIndexFile = searchForItem(currentIndexFile, webpage[i]);
+            if (currentIndexFile == null) {
+                if (createMissingDirectory) {
+                    // Add code to create the directory
+                } else {
+                    //exit
+                }
+                // Exit
+            }
+        }
+
+        for (int i = 0; i < extension.length; i++) {
+            currentIndexFile = searchForItem(currentIndexFile, extension[i]);
+            if (currentIndexFile == null) {
+                if (createMissingDirectory) {
+                    // Add code to create the directory
+                } else {
+                    //exit
+                }
+                // Exit
+            }
+        }
         return null;
     }
 
@@ -41,6 +81,8 @@ public class IndexURLTree {
     // Header is the http://
     // webpage is abc.com
     // extension is /page1/2/3
+    // This method should be the method that controls the depth of our tree. Breakdown more = more depth
+    // breakdown less = less depth
     private ArrayList<String[]> breakdownUrl(String url) {
 
         // Split url by the ://
