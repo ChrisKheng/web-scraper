@@ -22,7 +22,7 @@ public class IndexBuilder extends Thread {
         // TODO: add some sort of check to prevent busy waiting. Probably semaphore or something.
         // Currently I just make the thread sleep.
         while (true) {
-            logger.info(Integer.toString(buffer.size()));
+            // logger.info(Integer.toString(buffer.size()));
 
             if (buffer.size() > 0) {
                 String data = readBUL();
@@ -44,7 +44,7 @@ public class IndexBuilder extends Thread {
     public void writeIUT(String data) {
         //TODO: Write code
         // should be simply calling the write method of IndexURLTree
-        logger.info(data);
+        // logger.info(data);
 
     }
 
