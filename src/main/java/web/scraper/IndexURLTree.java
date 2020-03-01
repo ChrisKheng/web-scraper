@@ -111,10 +111,6 @@ public class IndexURLTree {
     private String searchForItem(String filename, String key) {
         //TODO: This method will search for the key in the filename, and return the next url to go to.
         try {
-            // TODO: Shouldn't we check the value? not the key?
-            if (key.contains(".html")) { // reached the end of the file name
-                return "";
-            }
             File file = new File(filename);
             FileReader fr = new FileReader(file);
             BufferedReader br = new BufferedReader(fr);
@@ -122,6 +118,8 @@ public class IndexURLTree {
             // TODO: Is looping the best way to do this? How expensive is string comparison
             // Could it be faster to put everything in hashmap and just search it?
             // Or binary search after putting things in a list?
+            // Alternate Solution 1: Split lines by ',' and put key-value pair into HashSet and check for key
+            // Alternate Solution 2: Add lines into list, sort and do binary search for key
             while ((line = br.readLine()) != null) {
                 if (line.contains(key)) { // key-value pair exists and found
                     String[] tokens = line.split(",");
