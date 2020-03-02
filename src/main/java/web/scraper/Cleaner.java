@@ -19,6 +19,7 @@ public class Cleaner extends Thread {
         System.out.println("\nStart cleaning............................");
         writeRemainingToTree();
         writeToDisk();
+        writeStatsToDisk();
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
@@ -44,5 +45,19 @@ public class Cleaner extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         } 
+    }
+
+    public void writeStatsToDisk() {
+        try {
+            File file = new File("./statistics.txt");
+            file.createNewFile();
+
+            FileWriter writer = new FileWriter(file);
+            writer.write(".............Stats............");
+            writer.write(String.format("%d new urls are found.", tree.size()));
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

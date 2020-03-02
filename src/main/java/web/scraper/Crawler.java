@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Represents a Crawling Thread (CT) which crawls the internet and scrape urls
@@ -20,13 +19,13 @@ public class Crawler extends Thread {
     // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
     private Logger logger;
-    private ConcurrentLinkedQueue<String> queue;
+    private List<String> queue;
     private TreeSet<String> tree;
     private List<String> buffer;
     private String threadName;
 
-    public Crawler(ConcurrentLinkedQueue<String> seeds, TreeSet<String> tree, List<String> buffer) {
-        this.queue = seeds; 
+    public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
+        this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
         this.logger = Logger.getLogger("Crawler thread");
@@ -40,23 +39,26 @@ public class Crawler extends Thread {
 
     @Override
     public void run() {
-        // Must put this here cuz if put in constructor, then currentThread is the thread that initialises the crawler
+        // Must put this here cuz if put in constructor, then currentThread is the
+        // thread that initialises the crawler
         // , not the real crawler thread itself.
         this.threadName = String.format("Thread %d", Thread.currentThread().getId());
 
         logger.info(String.format("%s receive %d initial urls", threadName, queue.size()));
         int counter = 0;
 
-        // The crawler thread will keep running as long as there are still urls for it to crawl.
-        // You can change the while loop condition if you want the crawler thread to terminate
+        // The crawler thread will keep running as long as there are still urls for it
+        // to crawl.
+        // You can change the while loop condition if you want the crawler thread to
+        // terminate
         // after a certain number of iterations using the counter variable.
-        while (!queue.isEmpty()) {
+        while (counter < 10) {
             counter++;
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
             try {
                 // Retrieves and removes head of queue
-                String searchUrl = queue.poll();
+                String searchUrl = queue.remove(0);
 
                 // Gets the html page and the urls in it.
                 HtmlPage page = client.getPage(searchUrl);
@@ -101,10 +103,14 @@ public class Crawler extends Thread {
 
         for (String url : urls) {
             // tree.add(url) is temporary for now cuz should be IBT that is writing to the tree
-            if (tree.add(url)) {
-                buffer.add(url);
-                queue.add(url);
-                count++;
+            // synchronised on the tree for now, but still for buffer, buffer must be synchronised later on among 
+            // the threads which share it. (For now, two threads share the same buffer)
+            synchronized (Crawler.class) {
+                if (tree.add(url)) {
+                    buffer.add(url);
+                    queue.add(url);
+                    count++;
+                }
             }
         }
 

@@ -11,7 +11,6 @@ import java.util.TreeSet;
 import java.util.stream.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class App {
     // TreeSet and LinkedList is NOT thread safe!!!
@@ -34,7 +33,7 @@ public class App {
         initialise();
 
         List<String> seeds = getURLSeeds();
-        List<ConcurrentLinkedQueue<String>> queues = splitList(seeds, 4);
+        List<List<String>> queues = splitList(seeds, 4);
 
         Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
         Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
@@ -86,24 +85,24 @@ public class App {
         return bufReader.lines().collect(Collectors.toList());
     }
 
-    // Split the given url list into the specified number of ConcurrentLinkedQueues
+    // Split the given url list into the specified number of subLists
     // Condition: number of urls in list given >= num of sublists
-    public List<ConcurrentLinkedQueue<String>> splitList(List<String> list, int numQueues) {
-        int portionSize = list.size() / numQueues;
+    public List<List<String>> splitList(List<String> list, int numSubLists) {
+        int portionSize = list.size() / numSubLists;
 
-        List<ConcurrentLinkedQueue<String>> result = new LinkedList<>();
-        ConcurrentLinkedQueue<String> temp = new ConcurrentLinkedQueue<>();
+        List<List<String>> result = new LinkedList<>();
+        List<String> temp = new LinkedList<>();
         int count = 0;
-        int currNumQueues = 0;
+        int currNumSubLists = 0;
 
         for (String url : list) {
-            temp.offer(url);
+            temp.add(url);
             count++;
 
-            if (count == portionSize && currNumQueues < numQueues - 1) {
+            if (count == portionSize && currNumSubLists < numSubLists - 1) {
                 result.add(temp);
-                temp = new ConcurrentLinkedQueue<>();
-                currNumQueues++;
+                temp = new LinkedList<>();
+                currNumSubLists++;
                 count = 0;
             }
         }
