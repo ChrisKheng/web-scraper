@@ -15,7 +15,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
  * Represents a Crawling Thread (CT) which crawls the internet and scrape urls
  * and their html contents.
  */
-public class Crawler implements Runnable {
+public class Crawler extends Thread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
@@ -34,7 +34,7 @@ public class Crawler implements Runnable {
 
         // Creates a new web client to visit the internet.
         this.client = new WebClient();
-        
+
         client.getOptions().setTimeout(10000);
         client.getOptions().setCssEnabled(false);
         client.getOptions().setJavaScriptEnabled(false);
@@ -46,7 +46,7 @@ public class Crawler implements Runnable {
     @Override
     public void run() {
         this.threadName = String.format("Thread %d", Thread.currentThread().getId());
-        
+
         logger.info(String.format("%s receive %d initial urls", threadName, queue.size()));
         int counter = 0;
 
@@ -101,19 +101,18 @@ public class Crawler implements Runnable {
     public void processUrls(List<String> urls) {
         logger.info(String.format("%s processing urls...", threadName));
 
-            int count = 0;
+        int count = 0;
 
-            for (String url : urls) {
-                if (tree.contains(url)) {
-                    // skip the current iteration
-                    return;
-                }
-                buffer.add(url);
-                tree.add(url); // have this here for now
-                queue.add(url);
-                count++;
+        for (String url : urls) {
+            if (tree.contains(url)) {
+                continue;
             }
-
-            logger.info(String.format("%d urls are new", count));
+            buffer.add(url);
+            tree.add(url); // have this here for now
+            queue.add(url);
+            count++;
         }
+
+        logger.info(String.format("%s %d urls are new", threadName, count));
+    }
 }

@@ -17,11 +17,10 @@ import java.util.logging.Logger;
 
 public class App {
     private static Logger logger;
-    private static TreeSet<String> tree;
+    private static TreeSet<String> tree = new TreeSet<>();
 
     public App(Logger logger) {
         App.logger = logger;
-        App.tree = new TreeSet<>();
     }
 
     public void run() throws Exception {
@@ -43,58 +42,49 @@ public class App {
 
         IndexBuilder indexBuilder = new IndexBuilder(tree, buffer1);
 
-        Thread t11 = new Thread(crawler1);
-        Thread t12 = new Thread(crawler2);
-        Thread t21 = new Thread(crawler3);
-        Thread t22 = new Thread(crawler4);
-
-        t11.start();
-        t12.start();
-        t21.start();
-        t22.start();
+        crawler1.start();
+        crawler2.start();
+        crawler3.start();
+        crawler4.start();
 
         Thread ib1 = new Thread(indexBuilder);
         ib1.start();
 
-        // Spawn and start crawler thread
-        // seeds can be split into different portion and give to the individual threads.
-        // Crawler crawler = new Crawler(seeds, tree, buffer);
-        // crawler.start();
-
         try {
-            t11.join();
-            t12.join();
-            t21.join();
-            t22.join();
+            crawler1.join();
+            crawler2.join();
+            crawler3.join();
+            crawler4.join();
         } catch (InterruptedException e) {
-            // e.printStackTrace();
-            System.err.print("Error occur!");
+            logger.severe(e.getMessage());
         }
     }
 
     // Read urls from seed file.
-    public List<String> getURLSeeds() {
+    public static List<String> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
         return bufReader.lines().collect(Collectors.toList());
     }
 
-    public static List<List<String>> splitList(List<String> list, int numPortions) {
-        int portionSize = list.size() / numPortions;
+    // Split the given url list into the specified number of sub lists. 
+    // Condition: number of urls in list given >= num of sublists 
+    public static List<List<String>> splitList(List<String> list, int numSubLists) {
+        int portionSize = list.size() / numSubLists;
 
         List<List<String>> result = new LinkedList<>();
         List<String> temp = new LinkedList<>();
         int count = 0;
-        int currNumPortions = 0;
+        int currNumSubLists = 0;
         
         for (String url : list) {
             temp.add(url);
             count++;
 
-            if (count == portionSize && currNumPortions < numPortions - 1) {
+            if (count == portionSize && currNumSubLists < numSubLists - 1) {
                 result.add(temp);
                 temp = new LinkedList<>();
-                currNumPortions++;
+                currNumSubLists++;
                 count = 0;
             }
         }
@@ -125,6 +115,8 @@ public class App {
     }
 
     public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Cleaner(tree));
+
         try {
             // The following 2 line removes log from the following 2 sources.
             java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
@@ -132,11 +124,11 @@ public class App {
 
             new App(Logger.getLogger("App")).run();
         } catch (Exception e) {
-            System.err.print("Error occur!");
+            System.err.print("Error occurs!");
         } finally {
-            writeToDisk(tree);
-            logger.info("Done........ =D");
-            System.out.println(tree.size());
+            // writeToDisk(tree);
+            // logger.info("Done........ =D");
+            // System.out.println(tree.size());
         }
     }
 }
