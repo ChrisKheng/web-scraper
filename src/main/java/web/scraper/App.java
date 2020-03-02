@@ -61,7 +61,7 @@ public class App {
     }
 
     public void initialise() {
-        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree));
+        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers));
 
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
