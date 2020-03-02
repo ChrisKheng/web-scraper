@@ -1,11 +1,10 @@
 package web.scraper;
 
-import java.net.MalformedURLException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.net.MalformedURLException;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
@@ -27,15 +26,14 @@ public class Crawler extends Thread {
     private String threadName;
 
     public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
-        this.queue = new LinkedList<>(seeds);
+        this.queue = seeds; 
         this.tree = tree;
         this.buffer = buffer;
-        this.logger = Logger.getLogger(String.format("My thread %d", Thread.currentThread().getId()));
+        this.logger = Logger.getLogger("Crawler thread");
 
         // Creates a new web client to visit the internet.
         this.client = new WebClient();
-
-        client.getOptions().setTimeout(10000);
+        client.getOptions().setTimeout(10000); // 10s
         client.getOptions().setCssEnabled(false);
         client.getOptions().setJavaScriptEnabled(false);
 
@@ -45,6 +43,8 @@ public class Crawler extends Thread {
 
     @Override
     public void run() {
+        // Must put this here cuz if put in constructor, then currentThread is the thread that initialises the crawler
+        // , not the real crawler thread itself.
         this.threadName = String.format("Thread %d", Thread.currentThread().getId());
 
         logger.info(String.format("%s receive %d initial urls", threadName, queue.size()));
@@ -55,7 +55,7 @@ public class Crawler extends Thread {
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
             try {
-                // Retrives and removes head of queue
+                // Retrieves and removes head of queue
                 String searchUrl = queue.remove(0);
 
                 // Gets the html page and the urls in it.
@@ -98,13 +98,12 @@ public class Crawler extends Thread {
         int count = 0;
 
         for (String url : urls) {
-            if (tree.contains(url)) {
-                continue;
+            // tree.add(url) is temporary for now cuz should be IBT that is writing to the tree
+            if (tree.add(url)) {
+                buffer.add(url);
+                queue.add(url);
+                count++;
             }
-            buffer.add(url);
-            tree.add(url); // have this here for now
-            queue.add(url);
-            count++;
         }
 
         logger.info(String.format("%s %d urls are new", threadName, count));
