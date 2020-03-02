@@ -48,13 +48,20 @@ public class App {
         crawler4.start();
 
         Thread ib1 = new Thread(indexBuilder);
-        ib1.start();
+        // ib1.start();
 
         try {
             crawler1.join();
+            logger.info(String.format("crawler %d joined...............................", crawler1.getId()));
+
             crawler2.join();
+            logger.info(String.format("crawler %d joined...............................", crawler2.getId()));
+
             crawler3.join();
+            logger.info(String.format("crawler %d joined...............................", crawler3.getId()));
+
             crawler4.join();
+            logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
         } catch (InterruptedException e) {
             logger.severe(e.getMessage());
         }

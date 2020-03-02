@@ -22,7 +22,6 @@ public class Crawler extends Thread {
     private List<String> queue;
     private TreeSet<String> tree;
     private List<String> buffer;
-    private long end;
     private String threadName;
 
     public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
@@ -36,9 +35,6 @@ public class Crawler extends Thread {
         client.getOptions().setTimeout(10000); // 10s
         client.getOptions().setCssEnabled(false);
         client.getOptions().setJavaScriptEnabled(false);
-
-        long start = System.currentTimeMillis();
-        this.end = start + 30 * 1000; // 30 seconds run time
     }
 
     @Override
@@ -50,7 +46,10 @@ public class Crawler extends Thread {
         logger.info(String.format("%s receive %d initial urls", threadName, queue.size()));
         int counter = 0;
 
-        while (counter < 100) {
+        // The crawler thread will keep running as long as there are still urls for it to crawl.
+        // You can change the while loop condition if you want the crawler thread to terminate
+        // after a certain number of iterations using the counter variable.
+        while (!queue.isEmpty()) {
             counter++;
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
@@ -72,6 +71,8 @@ public class Crawler extends Thread {
         logger.info(String.format("%s exiting......", threadName));
     }
 
+    // Returns all the urls in the html page given.
+    // The urls are the ones enclosed in <a> tag.
     public List<String> getUrls(HtmlPage page) {
         logger.info(String.format("%s extracting urls...", threadName));
 
