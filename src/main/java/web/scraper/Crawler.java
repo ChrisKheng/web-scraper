@@ -74,7 +74,7 @@ public class Crawler implements Runnable {
     // Write the urls to the buffer if the tree does not already contain the url given.
     public synchronized void processUrls(List<String> urls) {
         urls.forEach(url -> {
-            if (tree.contains(url)) {
+            if (tree.contains(url) || !validUrl(url)) {
                 // skip the current iteration
                 return;
             }
@@ -82,5 +82,12 @@ public class Crawler implements Runnable {
             tree.add(url); // have this here for now
             queue.add(url);
         });
+    }
+    
+    // Checks if the url is a http link
+    // Removes other links like javascript and mailto
+    public boolean validUrl(String url) {
+        if (url.substring(0,4).equals("http")) return true;
+        else return false;
     }
 }
