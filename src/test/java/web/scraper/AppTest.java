@@ -9,8 +9,6 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
-import java.util.stream.*;
-import java.util.logging.Logger;
 
 public class AppTest {
     @Test public void testAppHasAGreeting() {
@@ -24,9 +22,11 @@ public class AppTest {
             File file = new File("./url-example.txt");
             System.setIn(new FileInputStream(file));
 
-            List<String> urls = App.getURLSeeds();
+            App classUnderTest = new App();
+
+            List<String> urls = classUnderTest.getURLSeeds();
             
-            List<List<String>> lists = App.splitList(urls, 6);
+            List<List<String>> lists = classUnderTest.splitList(urls, 6);
             int size = lists.stream().mapToInt(list -> list.size()).sum();
 
             assertEquals(urls.size(), size);

@@ -44,7 +44,7 @@ public class IndexBuilder extends Thread {
     public void writeIUT(String data) {
         //TODO: Write code
         // should be simply calling the write method of IndexURLTree
-        // logger.info(data);
+        logger.info(data);
 
     }
 

@@ -64,13 +64,7 @@ public class Crawler extends Thread {
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
 
                 processUrls(urls);
-
-                // Write urls from buffer to tree
-                // To be removed later as this is supposed to be done by the Index Building
-                // Thread.
-                // tree.addAll(buffer);
             } catch (Exception e) {
-                // e.printStackTrace();
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
             }
         }
