@@ -88,7 +88,7 @@ public class Crawler extends Thread {
                 return page.getFullyQualifiedUrl(relativePath).toString();
             } catch (MalformedURLException e) {
                 return "";
-            }
+           }
         }).filter(url -> !url.equals("")).collect(Collectors.toList());
 
         return urls;
@@ -115,5 +115,12 @@ public class Crawler extends Thread {
         }
 
         logger.info(String.format("%s %d urls are new", threadName, count));
+    }
+    
+    // Checks if the url is a http link
+    // Removes other links like javascript and mailto
+    public boolean validUrl(String url) {
+        if (url.substring(0,4).equals("http")) return true;
+        else return false;
     }
 }
