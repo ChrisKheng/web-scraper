@@ -47,6 +47,9 @@ public class App {
         crawler3.start();
         crawler4.start();
 
+        // Commented out ib thread start() so that the program will terminate after all crawler threads have
+        // returned.
+        // If the ib thread is still running, the program will not terminate.
         Thread ib1 = new Thread(indexBuilder);
         // ib1.start();
 
