@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
+import java.util.concurrent.*;
 
 public class AppTest {
     @Test public void testAppHasAGreeting() {
@@ -26,8 +27,8 @@ public class AppTest {
 
             List<String> urls = classUnderTest.getURLSeeds();
             
-            List<List<String>> lists = classUnderTest.splitList(urls, 6);
-            int size = lists.stream().mapToInt(list -> list.size()).sum();
+            List<ConcurrentLinkedQueue<String>> queues = classUnderTest.splitList(urls, 6);
+            int size = queues.stream().mapToInt(queue -> queue.size()).sum();
 
             assertEquals(urls.size(), size);
         } catch (Exception e) {

@@ -11,6 +11,7 @@ import java.util.TreeSet;
 import java.util.stream.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class App {
     // TreeSet and LinkedList is NOT thread safe!!!
@@ -33,12 +34,12 @@ public class App {
         initialise();
 
         List<String> seeds = getURLSeeds();
-        List<List<String>> subLists = splitList(seeds, 4);
+        List<ConcurrentLinkedQueue<String>> queues = splitList(seeds, 4);
 
-        Crawler crawler1 = new Crawler(subLists.get(0), tree, this.buffers.get(0));
-        Crawler crawler2 = new Crawler(subLists.get(1), tree, this.buffers.get(0));
-        Crawler crawler3 = new Crawler(subLists.get(2), tree, this.buffers.get(1));
-        Crawler crawler4 = new Crawler(subLists.get(3), tree, this.buffers.get(1));
+        Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
+        Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
+        Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1));
+        Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1));
 
         IndexBuilder indexBuilder = new IndexBuilder(tree, this.buffers.get(0));
 
@@ -85,24 +86,24 @@ public class App {
         return bufReader.lines().collect(Collectors.toList());
     }
 
-    // Split the given url list into the specified number of sub lists.
+    // Split the given url list into the specified number of ConcurrentLinkedQueues
     // Condition: number of urls in list given >= num of sublists
-    public List<List<String>> splitList(List<String> list, int numSubLists) {
-        int portionSize = list.size() / numSubLists;
+    public List<ConcurrentLinkedQueue<String>> splitList(List<String> list, int numQueues) {
+        int portionSize = list.size() / numQueues;
 
-        List<List<String>> result = new LinkedList<>();
-        List<String> temp = new LinkedList<>();
+        List<ConcurrentLinkedQueue<String>> result = new LinkedList<>();
+        ConcurrentLinkedQueue<String> temp = new ConcurrentLinkedQueue<>();
         int count = 0;
-        int currNumSubLists = 0;
+        int currNumQueues = 0;
 
         for (String url : list) {
-            temp.add(url);
+            temp.offer(url);
             count++;
 
-            if (count == portionSize && currNumSubLists < numSubLists - 1) {
+            if (count == portionSize && currNumQueues < numQueues - 1) {
                 result.add(temp);
-                temp = new LinkedList<>();
-                currNumSubLists++;
+                temp = new ConcurrentLinkedQueue<>();
+                currNumQueues++;
                 count = 0;
             }
         }

@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Represents a Crawling Thread (CT) which crawls the internet and scrape urls
@@ -19,12 +20,12 @@ public class Crawler extends Thread {
     // seeds is the portion of the original urls assigned to a crawler thread.
     private WebClient client;
     private Logger logger;
-    private List<String> queue;
+    private ConcurrentLinkedQueue<String> queue;
     private TreeSet<String> tree;
     private List<String> buffer;
     private String threadName;
 
-    public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
+    public Crawler(ConcurrentLinkedQueue<String> seeds, TreeSet<String> tree, List<String> buffer) {
         this.queue = seeds; 
         this.tree = tree;
         this.buffer = buffer;
@@ -55,7 +56,7 @@ public class Crawler extends Thread {
 
             try {
                 // Retrieves and removes head of queue
-                String searchUrl = queue.remove(0);
+                String searchUrl = queue.poll();
 
                 // Gets the html page and the urls in it.
                 HtmlPage page = client.getPage(searchUrl);
