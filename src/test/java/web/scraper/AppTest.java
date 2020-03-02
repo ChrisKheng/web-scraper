@@ -19,7 +19,7 @@ public class AppTest {
     @Test public void testSplitList() {
         // Modify system.in first
         try {
-            File file = new File("./url-example.txt");
+            File file = new File("./seeds.txt");
             System.setIn(new FileInputStream(file));
 
             App classUnderTest = new App();
