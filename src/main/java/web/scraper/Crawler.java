@@ -52,7 +52,7 @@ public class Crawler extends Thread {
         // You can change the while loop condition if you want the crawler thread to
         // terminate
         // after a certain number of iterations using the counter variable.
-        while (counter < 10) {
+        while (!queue.isEmpty()) {
             counter++;
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 

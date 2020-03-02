@@ -25,7 +25,7 @@ public class App {
         this.logger = Logger.getLogger("App");
         this.tree = new TreeSet<>();
         this.buffers = new LinkedList<>();
-        IntStream.range(0, 2).forEach(x -> buffers.add(new LinkedList<>()));
+        IntStream.range(0, 3).forEach(x -> buffers.add(new LinkedList<>()));
     }
 
     public void run() {
@@ -33,12 +33,14 @@ public class App {
         initialise();
 
         List<String> seeds = getURLSeeds();
-        List<List<String>> queues = splitList(seeds, 4);
+        List<List<String>> queues = splitList(seeds, 6);
 
         Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
         Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
         Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1));
         Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1));
+        Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2));
+        Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2));
 
         IndexBuilder indexBuilder = new IndexBuilder(tree, this.buffers.get(0));
 
@@ -46,6 +48,8 @@ public class App {
         crawler2.start();
         crawler3.start();
         crawler4.start();
+        crawler5.start();
+        crawler6.start();
 
         // Commented out ib thread start() so that the program will terminate after all crawler threads have
         // returned.
@@ -65,6 +69,12 @@ public class App {
 
             crawler4.join();
             logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
+
+            crawler5.join();
+            logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
+
+            crawler6.join();
+            logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
         } catch (InterruptedException e) {
             logger.severe(e.getMessage());
         }
