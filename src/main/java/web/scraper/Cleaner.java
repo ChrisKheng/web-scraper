@@ -18,7 +18,7 @@ public class Cleaner extends Thread {
     public void run() {
         System.out.println("\nStart cleaning............................");
         writeRemainingToTree();
-        writeToDisk();
+        writeFromTreeToDisk();
         writeStatsToDisk();
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
@@ -29,7 +29,7 @@ public class Cleaner extends Thread {
         });
     }
 
-    public void writeToDisk() {
+    public void writeFromTreeToDisk() {
         try {
             File file = new File("./result.txt");
             file.createNewFile();
@@ -53,7 +53,7 @@ public class Cleaner extends Thread {
             file.createNewFile();
 
             FileWriter writer = new FileWriter(file);
-            writer.write(".............Stats............");
+            writer.write(".............Stats............\n");
             writer.write(String.format("%d new urls are found.", tree.size()));
             writer.close();
         } catch (IOException e) {
