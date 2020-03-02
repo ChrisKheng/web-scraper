@@ -106,7 +106,10 @@ public class Crawler extends Thread {
             // synchronised on the tree for now, but still for buffer, buffer must be synchronised later on among 
             // the threads which share it. (For now, two threads share the same buffer)
             synchronized (Crawler.class) {
-                if (tree.add(url)) {
+                // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
+                // by tree.add(url) as false is returned if the tree already has the url.
+                // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
+                if (isValidUrl(url) && tree.add(url)) {
                     buffer.add(url);
                     queue.add(url);
                     count++;
@@ -119,7 +122,7 @@ public class Crawler extends Thread {
     
     // Checks if the url is a http link
     // Removes other links like javascript and mailto
-    public boolean validUrl(String url) {
+    public boolean isValidUrl(String url) {
         if (url.substring(0,4).equals("http")) return true;
         else return false;
     }
