@@ -1,1 +1,1 @@
-./gradlew run < seed.txt
+./gradlew run < seeds.txt

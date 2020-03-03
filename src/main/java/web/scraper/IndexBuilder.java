@@ -22,7 +22,7 @@ public class IndexBuilder extends Thread {
         // TODO: add some sort of check to prevent busy waiting. Probably semaphore or something.
         // Currently I just make the thread sleep.
         while (true) {
-            logger.info(Integer.toString(buffer.size()));
+            // logger.info(Integer.toString(buffer.size()));
 
             if (buffer.size() > 0) {
                 String data = readBUL();

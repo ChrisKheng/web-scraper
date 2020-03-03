@@ -4,100 +4,121 @@
 package web.scraper;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.stream.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
 public class App {
+    // TreeSet and LinkedList is NOT thread safe!!!
+    // Visit
+    // https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
+    // for how to ensure thread safety using TreeSet.
+    private Logger logger;
+    private TreeSet<String> tree;
+    private List<List<String>> buffers;
+
+    public App() {
+        this.logger = Logger.getLogger("App");
+        this.tree = new TreeSet<>();
+        this.buffers = new LinkedList<>();
+        IntStream.range(0, 3).forEach(x -> buffers.add(new LinkedList<>()));
+    }
 
     public void run() {
-        Logger logger = Logger.getLogger("App");
-        // The following 2 line removes log from the following 2 sources.
-        //java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
-        //java.util.logging.Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
-        List<String> seeds = getURLSeeds();
-
-        // TreeSet and LinkedList is NOT thread safe!!!
-        // Visit https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
-        // for how to ensure thread safety using TreeSet.
-        TreeSet<String> tree = new TreeSet<>();
-        List<String> buffer1 = new LinkedList<>();
-        List<String> buffer2 = new LinkedList<>();
-
         logger.info("Starting........ =D");
-        
-        Crawler crawler1 = new Crawler(seeds.subList(0,1), tree, buffer1);
-        Crawler crawler2 = new Crawler(seeds.subList(1,2), tree, buffer2);
+        initialise();
 
-        IndexBuilder indexBuilder = new IndexBuilder(tree, buffer1);
+        List<String> seeds = getURLSeeds();
+        List<List<String>> queues = splitList(seeds, 6);
 
-        Thread t11 = new Thread(crawler1);
-        Thread t12 = new Thread(crawler1);
-        Thread t21 = new Thread(crawler2);
-        Thread t22 = new Thread(crawler2);
+        Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
+        Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
+        Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1));
+        Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1));
+        Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2));
+        Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2));
 
-        
-        t11.start();
-        t12.start();
-        t21.start();
-        t22.start();
+        IndexBuilder indexBuilder = new IndexBuilder(tree, this.buffers.get(0));
 
+        crawler1.start();
+        crawler2.start();
+        crawler3.start();
+        crawler4.start();
+        crawler5.start();
+        crawler6.start();
 
+        // Commented out ib thread start() so that the program will terminate after all crawler threads have
+        // returned.
+        // If the ib thread is still running, the program will not terminate.
         Thread ib1 = new Thread(indexBuilder);
-        ib1.start();
-
-        // Spawn and start crawler thread
-        // seeds can be split into different portion and give to the individual threads.
-        // Crawler crawler = new Crawler(seeds, tree, buffer);
-        // crawler.start();
+        // ib1.start();
 
         try {
-            t11.join();
-            t12.join();
-            t21.join();
-            t22.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            crawler1.join();
+            logger.info(String.format("crawler %d joined...............................", crawler1.getId()));
 
-        writeToDisk(tree);
-        logger.info("Done........ =D");
-        System.out.println(tree.size());
+            crawler2.join();
+            logger.info(String.format("crawler %d joined...............................", crawler2.getId()));
+
+            crawler3.join();
+            logger.info(String.format("crawler %d joined...............................", crawler3.getId()));
+
+            crawler4.join();
+            logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
+
+            crawler5.join();
+            logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
+
+            crawler6.join();
+            logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
+        } catch (InterruptedException e) {
+            logger.severe(e.getMessage());
+        }
+    }
+
+    public void initialise() {
+        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers));
+
+        // The following 2 line removes log from the following 2 sources.
+        Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+        Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
     }
 
     // Read urls from seed file.
-    public static List<String> getURLSeeds() {
+    public List<String> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
         return bufReader.lines().collect(Collectors.toList());
     }
 
-    // Write the urls to the disk.
-    public static void writeToDisk(TreeSet<String> tree) {
-        try {
-            File file = new File("./result.txt");
-            file.createNewFile();
+    // Split the given url list into the specified number of subLists
+    // Condition: number of urls in list given >= num of sublists
+    public List<List<String>> splitList(List<String> list, int numSubLists) {
+        int portionSize = list.size() / numSubLists;
 
-            FileWriter writer = new FileWriter(file);
-            tree.forEach(url -> {
-                try {
-                    writer.write(url);
-                    writer.write("\n");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        List<List<String>> result = new LinkedList<>();
+        List<String> temp = new LinkedList<>();
+        int count = 0;
+        int currNumSubLists = 0;
+
+        for (String url : list) {
+            temp.add(url);
+            count++;
+
+            if (count == portionSize && currNumSubLists < numSubLists - 1) {
+                result.add(temp);
+                temp = new LinkedList<>();
+                currNumSubLists++;
+                count = 0;
+            }
         }
+        result.add(temp);
+
+        return result;
     }
 
     public static void main(String[] args) {

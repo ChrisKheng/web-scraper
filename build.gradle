@@ -7,6 +7,9 @@
  */
 
 plugins {
+    // For shadow jar
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+
     // Apply the java plugin to add support for Java
     id 'java'
 
@@ -36,4 +39,13 @@ application {
 
 run {
     standardInput = System.in
+}
+
+jar {
+  manifest {
+    attributes(
+      'Class-Path': configurations.compile,
+      'Main-Class': 'web.scraper.App'
+    )
+  }
 }
