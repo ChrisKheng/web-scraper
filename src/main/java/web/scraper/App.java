@@ -7,7 +7,12 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +61,10 @@ public class App {
         // If the ib thread is still running, the program will not terminate.
         Thread ib1 = new Thread(indexBuilder);
         // ib1.start();
+       
+        Thread stats = new StatsWriter(tree);
+        stats.start();
+        
 
         try {
             crawler1.join();
@@ -79,6 +88,7 @@ public class App {
             logger.severe(e.getMessage());
         }
     }
+    
 
     public void initialise() {
         Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers));
