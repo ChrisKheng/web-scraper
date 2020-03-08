@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -46,7 +44,7 @@ public class IndexURLTree {
         return f.exists();
     }
 
-    private void writeDataToFile(File f, String data) throws IOException{
+    private void writeDataToFile(File f, String data) throws IOException {
         FileWriter fw = new FileWriter(f);
         fw.write(data);
         fw.close();
@@ -75,7 +73,6 @@ public class IndexURLTree {
 //            // File already exist
 //            System.out.println("exist");
 //        }
-
 
         // THE FOLLOWING IS JUST PSEUDO CODE!!! NOT WORKING YET.
 //        String currentIndexFile = ""; // Add in first index file here
@@ -154,12 +151,15 @@ public class IndexURLTree {
 
         StringBuilder builder = new StringBuilder();
         builder.append(ROOT_DIRECTORY + "/");
-        for(int i = 0; i < header.length; i++)
+        for (int i = 0; i < header.length; i++) {
             builder.append(header[i] + "/");
-        for(int i = 0; i < webpage.length; i++)
+        }
+        for (int i = 0; i < webpage.length; i++) {
             builder.append(webpage[i] + "/");
-        for(int i = 0; i < extension.length; i++)
+        }
+        for (int i = 0; i < extension.length; i++) {
             builder.append(extension[i] + "/");
+        }
         builder.append(HTML_FILENAME);
         return builder.toString();
     }
@@ -201,7 +201,8 @@ public class IndexURLTree {
             e.printStackTrace();
         }
     }
-// ========================== The following code is simply used for testing ===============================================================================
+
+    // ========================== The following code is simply used for testing ===============================================================================
 //TODO: Refactor test code into test folder
     public static void main(String[] args) {
         IndexURLTree IUT = new IndexURLTree();
@@ -211,16 +212,18 @@ public class IndexURLTree {
 //        IUT.testBreakdownUrl("http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html");
 //        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
 //        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
-        IUT.testAddURLandContent("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf", "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
-            + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
-            + "<html>\n"
-            + "<head>\n"
-            + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-            + "<title>$title</title>\n"
-            + "</head>\n"
-            + "<body>$body\n"
-            + "</body>\n"
-            + "</html>");
+        IUT.testAddURLandContent(
+            "http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf",
+            "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>");
 //         IUT.testIsDuplicate("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
     }
 
@@ -242,18 +245,19 @@ public class IndexURLTree {
     public void testAddURLandContent(String url, String html) {
         final long startTime = System.currentTimeMillis();
         for (int i = 0; i < 10000; i++) {
-            addURLandContent(url+i, html);
+            addURLandContent(url + i, html);
         }
-        final long endTime  = System.currentTimeMillis();
-        System.out.println((endTime - startTime)/1000);
+        final long endTime = System.currentTimeMillis();
+        System.out.println((endTime - startTime) / 1000);
     }
+
     public void testIsDuplicate(String url) {
         final long startTime = System.currentTimeMillis();
         for (int i = 0; i < 10000; i++) {
-            isDuplicate(url+"FILLER"+i);
+            isDuplicate(url + "FILLER" + i);
         }
-        final long endTime  = System.currentTimeMillis();
-        System.out.println((endTime - startTime)/1000);
+        final long endTime = System.currentTimeMillis();
+        System.out.println((endTime - startTime) / 1000);
     }
 
 }
