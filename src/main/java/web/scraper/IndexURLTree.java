@@ -11,18 +11,47 @@ import java.util.Arrays;
 
 public class IndexURLTree {
 
+    private String ROOT_DIRECTORY = "data";
+    private String HTML_FILENAME = "content.html";
+
     public IndexURLTree() {
 
     }
 
     public void addURLandContent(String url, String content) {
         //TODO: Add URL and Content passed to this method to the tree
+        String path = getPathFromUrl(url);
+
+        File f = new File(path);
+        if (f.exists()) {
+            // file already exist
+            return;
+        }
+
+        try {
+            f.getParentFile().mkdirs();
+            f.createNewFile();
+            writeDataToFile(f, content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void isDuplicate(String url) {
+    public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
+        String path = getPathFromUrl(url);
+        File f = new File(path);
+        return f.exists();
     }
 
+    private void writeDataToFile(File f, String data) throws IOException {
+        FileWriter fw = new FileWriter(f);
+        fw.write(data);
+        fw.close();
+    }
+
+    @Deprecated
+    // This method is not used currently
     private String navigateDirectory(String url, boolean createMissingDirectory) {
         //TODO: This method will read the url, and return name of the file containing the url's html content
         // If createMissingDirectory is true, it will add the url into all the indexes it passes through,
@@ -33,48 +62,55 @@ public class IndexURLTree {
         // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
 
         // Shall use string split for now, but can switch to guava splitter if too slow
-        ArrayList<String[]> breakdown = breakdownUrl(url);
-        String[] header = breakdown.get(0);
-        String[] webpage = breakdown.get(1);
-        String[] extension = breakdown.get(2);
+        // Currently only need path. If need the webpage, extension etc, check the getPathFromURL method
+//        String path = ROOT_DIRECTORY + getPathFromUrl(url);
+//
+//        File f = new File(path);
+//        if (f.mkdirs()) {
+//            // File don't exist
+//            System.out.println("don't exist");
+//        } else {
+//            // File already exist
+//            System.out.println("exist");
+//        }
 
         // THE FOLLOWING IS JUST PSEUDO CODE!!! NOT WORKING YET.
-        String currentIndexFile = ""; // Add in first index file here
-        for (int i = 0; i < header.length; i++) {
-            currentIndexFile = searchForItem(currentIndexFile, header[i]);
-            if (currentIndexFile == null) {
-                if (createMissingDirectory) {
-                    // Add code to create the directory
-                } else {
-                    //exit
-                }
-                // Exit
-            }
-        }
-
-        for (int i = 0; i < webpage.length; i++) {
-            currentIndexFile = searchForItem(currentIndexFile, webpage[i]);
-            if (currentIndexFile == null) {
-                if (createMissingDirectory) {
-                    // Add code to create the directory
-                } else {
-                    //exit
-                }
-                // Exit
-            }
-        }
-
-        for (int i = 0; i < extension.length; i++) {
-            currentIndexFile = searchForItem(currentIndexFile, extension[i]);
-            if (currentIndexFile == null) {
-                if (createMissingDirectory) {
-                    // Add code to create the directory
-                } else {
-                    //exit
-                }
-                // Exit
-            }
-        }
+//        String currentIndexFile = ""; // Add in first index file here
+//        for (int i = 0; i < header.length; i++) {
+//            currentIndexFile = searchForItem(currentIndexFile, header[i]);
+//            if (currentIndexFile == null) {
+//                if (createMissingDirectory) {
+//                    // Add code to create the directory
+//                } else {
+//                    //exit
+//                }
+//                // Exit
+//            }
+//        }
+//
+//        for (int i = 0; i < webpage.length; i++) {
+//            currentIndexFile = searchForItem(currentIndexFile, webpage[i]);
+//            if (currentIndexFile == null) {
+//                if (createMissingDirectory) {
+//                    // Add code to create the directory
+//                } else {
+//                    //exit
+//                }
+//                // Exit
+//            }
+//        }
+//
+//        for (int i = 0; i < extension.length; i++) {
+//            currentIndexFile = searchForItem(currentIndexFile, extension[i]);
+//            if (currentIndexFile == null) {
+//                if (createMissingDirectory) {
+//                    // Add code to create the directory
+//                } else {
+//                    //exit
+//                }
+//                // Exit
+//            }
+//        }
         return null;
     }
 
@@ -105,6 +141,27 @@ public class IndexURLTree {
         String[] extension = url_second_split[1].split("/");
 
         return new ArrayList<>(Arrays.asList(header, webpage, extension));
+    }
+
+    private String getPathFromUrl(String url) {
+        ArrayList<String[]> breakdown = breakdownUrl(url);
+        String[] header = breakdown.get(0);
+        String[] webpage = breakdown.get(1);
+        String[] extension = breakdown.get(2);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(ROOT_DIRECTORY + "/");
+        for (int i = 0; i < header.length; i++) {
+            builder.append(header[i] + "/");
+        }
+        for (int i = 0; i < webpage.length; i++) {
+            builder.append(webpage[i] + "/");
+        }
+        for (int i = 0; i < extension.length; i++) {
+            builder.append(extension[i] + "/");
+        }
+        builder.append(HTML_FILENAME);
+        return builder.toString();
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
@@ -145,14 +202,29 @@ public class IndexURLTree {
         }
     }
 
+    // ========================== The following code is simply used for testing ===============================================================================
+//TODO: Refactor test code into test folder
     public static void main(String[] args) {
         IndexURLTree IUT = new IndexURLTree();
         // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
         // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
         // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
-        IUT.testBreakdownUrl("http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html");
-        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
-        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
+//        IUT.testBreakdownUrl("http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html");
+//        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
+//        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
+        IUT.testAddURLandContent(
+            "http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf",
+            "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>");
+//         IUT.testIsDuplicate("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
     }
 
     public void testBreakdownUrl(String url) {
@@ -164,6 +236,28 @@ public class IndexURLTree {
         System.out.println(Arrays.toString(header));
         System.out.println(Arrays.toString(webpage));
         System.out.println(Arrays.toString(extension));
+    }
+
+    public void testNavigateDirectory(String url) {
+        navigateDirectory(url, false);
+    }
+
+    public void testAddURLandContent(String url, String html) {
+        final long startTime = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            addURLandContent(url + i, html);
+        }
+        final long endTime = System.currentTimeMillis();
+        System.out.println((endTime - startTime) / 1000);
+    }
+
+    public void testIsDuplicate(String url) {
+        final long startTime = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            isDuplicate(url + "FILLER" + i);
+        }
+        final long endTime = System.currentTimeMillis();
+        System.out.println((endTime - startTime) / 1000);
     }
 
 }
