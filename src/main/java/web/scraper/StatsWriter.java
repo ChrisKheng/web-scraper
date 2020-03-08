@@ -7,6 +7,7 @@ package web.scraper;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.TreeSet;
 
 /**
@@ -29,15 +30,20 @@ public class StatsWriter extends Thread {
 
             FileWriter writer = new FileWriter(file);
             writer.write(".............Stats............\n");
+            
             while (true) {
-                // sleeps thread for 1 hour
-                int pastSize = tree.size();
-                Thread.sleep(1000);//*60*60);
-                int newSize = tree.size();
-                writer.write(String.format("%d new urls found", newSize - pastSize));
+                try{
+                    // sleeps thread for 1 hour (currently 1 second for testing)
+                    int pastSize = tree.size();
+                    Thread.sleep(1000);//*60*60);
+                    int newSize = tree.size();
+                    writer.write(String.format("%d new urls found", newSize - pastSize));
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-     }
+    }
 }
