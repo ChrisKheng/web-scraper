@@ -7,12 +7,12 @@ import java.util.logging.Logger;
 
 public class IndexBuilder extends Thread {
 
-    private TreeSet<String> tree;
+//    private TreeSet<String> tree;
+    private IndexURLTree tree;
     private LinkedList<String> buffer;
     private Logger logger = Logger.getLogger("IndexBuilder");
 
-    // I put everything for now, but probably only need buffer and IUT.
-    public IndexBuilder(TreeSet<String> tree, List<String> buffer) {
+    public IndexBuilder(IndexURLTree tree, List<String> buffer) {
         this.tree = tree;
         this.buffer = (LinkedList<String>) buffer;
     }
@@ -37,15 +37,16 @@ public class IndexBuilder extends Thread {
     }
 
     public String readBUL() {
+        //TODO: Get both the URL and HTML content and return both
         String data = buffer.removeFirst();
         return data;
     }
 
     public void writeIUT(String data) {
         //TODO: Write code
-        // should be simply calling the write method of IndexURLTree
+        //TODO: Include HTML content into parameter once Crawler gets HTML content
+        tree.addURLandContent(data, "");
         logger.info(data);
-
     }
 
 }
