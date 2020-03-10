@@ -13,6 +13,7 @@ import java.util.stream.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class App {
     // TreeSet and LinkedList is NOT thread safe!!!
@@ -96,6 +97,17 @@ public class App {
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
         Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
+
+        try {
+            // Configure logger to write to external log file
+            // TODO: Should this be removed? As the log file can be very large if run for the whole day.
+            FileHandler handler = new FileHandler("./log.txt");
+            SimpleFormatter formatter = new SimpleFormatter();
+            handler.setFormatter(formatter);
+            Logger.getLogger("").addHandler(handler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Read urls from seed file.
