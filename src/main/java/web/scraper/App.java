@@ -4,11 +4,13 @@
 package web.scraper;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,7 +23,7 @@ public class App {
     // We can try ConcurrentLinkedQueue for buffers instead
     private Logger logger;
     private IndexURLTree tree;
-    private List<List<String>> buffers;
+    private List<List<Pair<String, String>>> buffers;
 
     public App() {
         this.logger = Logger.getLogger("App");

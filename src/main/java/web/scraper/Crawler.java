@@ -1,7 +1,6 @@
 package web.scraper;
 
 import java.util.List;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.net.MalformedURLException;
@@ -21,10 +20,10 @@ public class Crawler extends Thread {
     private Logger logger;
     private List<String> queue;
     private IndexURLTree tree;
-    private List<String> buffer;
+    private List<Pair<String, String>> buffer;
     private String threadName;
 
-    public Crawler(List<String> seeds, IndexURLTree tree, List<String> buffer) {
+    public Crawler(List<String> seeds, IndexURLTree tree, List<Pair<String, String>> buffer) {
         this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
@@ -57,11 +56,16 @@ public class Crawler extends Thread {
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
             try {
-                // Retrieves and removes head of queue
+                // Get the url, visit and retrieve the html page of the url
                 String searchUrl = queue.remove(0);
-
-                // Gets the html page and the urls in it.
                 HtmlPage page = client.getPage(searchUrl);
+                Pair<String, String> pair = new Pair<>(searchUrl, page.asXml());
+
+                // Synchronises accesses between the crawler threads which share the same buffer
+                synchronized (buffer) {
+                    buffer.add(pair);
+                }
+
                 List<String> urls = getUrls(page);
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
 
@@ -94,23 +98,20 @@ public class Crawler extends Thread {
         return urls;
     }
 
-    // Write the urls to the buffer if the tree does not already contain the url
-    // given.
+    // Write the new urls found to the queue if the tree does not already contain the url given.
     public void processUrls(List<String> urls) {
         logger.info(String.format("%s processing urls...", threadName));
 
         int count = 0;
 
+        // TODO - Check if the url also exists in all other crawler threads or not before adding to the 
+        // queue (here the entire for loop may need to be synchronised, check carefully)
         for (String url : urls) {
-            // tree.add(url) is temporary for now cuz should be IBT that is writing to the tree
-            // synchronised on the tree for now, but still for buffer, buffer must be synchronised later on among 
-            // the threads which share it. (For now, two threads share the same buffer)
             synchronized (Crawler.class) {
                 // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
                 // by tree.add(url) as false is returned if the tree already has the url.
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
                 if (isValidUrl(url) && tree.isDuplicate(url)) {
-                    buffer.add(url);
                     queue.add(url);
                     count++;
                 }
