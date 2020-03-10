@@ -30,8 +30,13 @@ public class IndexURLTree {
 
         try {
             f.getParentFile().mkdirs();
-            f.createNewFile();
-            writeDataToFile(f, content);
+            if (f.createNewFile()) {
+                // file did not exist, file created
+                writeDataToFile(f, content);
+            } else {
+                // file did exist, file did not create
+                return;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
