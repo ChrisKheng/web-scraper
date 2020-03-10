@@ -28,16 +28,18 @@ public class StatsWriter extends Thread {
             File file = new File("./statistics.txt");
             file.createNewFile();
 
-            FileWriter writer = new FileWriter(file);
-            writer.write(".............Stats............\n");
+//            FileWriter writer = new FileWriter(file);
+//            writer.write(".............Stats............\n");
             
             while (true && !this.isInterrupted()) {
                 try{
+                    FileWriter writer = new FileWriter(file);
                     // sleeps thread for 1 hour (currently 1 second for testing)
                     long pastSize = tree.size();
                     Thread.sleep(1000);//*60*60);
                     long newSize = tree.size();
                     writer.write(String.format("%d new urls found", newSize - pastSize));
+                    writer.close();
                 } catch(Exception e) {
                     e.printStackTrace();
                     break;
