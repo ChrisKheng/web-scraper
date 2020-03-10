@@ -17,13 +17,15 @@ public class App {
     // Visit
     // https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
     // for how to ensure thread safety using TreeSet.
+
+    // We can try ConcurrentLinkedQueue for buffers instead
     private Logger logger;
-    private TreeSet<String> tree;
+    private IndexURLTree tree;
     private List<List<String>> buffers;
 
     public App() {
         this.logger = Logger.getLogger("App");
-        this.tree = new TreeSet<>();
+        this.tree = new IndexURLTree();
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(new LinkedList<>()));
     }
@@ -56,7 +58,8 @@ public class App {
         // If the ib thread is still running, the program will not terminate.
         Thread ib1 = new Thread(indexBuilder);
         // ib1.start();
-       
+
+        // what is this for?
         Thread stats = new StatsWriter(tree);
         stats.start();
         

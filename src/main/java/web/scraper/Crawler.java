@@ -20,11 +20,11 @@ public class Crawler extends Thread {
     private WebClient client;
     private Logger logger;
     private List<String> queue;
-    private TreeSet<String> tree;
+    private IndexURLTree tree;
     private List<String> buffer;
     private String threadName;
 
-    public Crawler(List<String> seeds, TreeSet<String> tree, List<String> buffer) {
+    public Crawler(List<String> seeds, IndexURLTree tree, List<String> buffer) {
         this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
@@ -109,7 +109,7 @@ public class Crawler extends Thread {
                 // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
                 // by tree.add(url) as false is returned if the tree already has the url.
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
-                if (isValidUrl(url) && tree.add(url)) {
+                if (isValidUrl(url) && tree.isDuplicate(url)) {
                     buffer.add(url);
                     queue.add(url);
                     count++;

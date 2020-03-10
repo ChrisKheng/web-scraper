@@ -16,9 +16,9 @@ import java.util.TreeSet;
  */
 public class StatsWriter extends Thread {
     
-    private TreeSet<String> tree;
-    
-    public StatsWriter (TreeSet<String> tree) {
+    private IndexURLTree tree;
+
+    public StatsWriter (IndexURLTree tree) {
             this.tree = tree;  
     }
     
