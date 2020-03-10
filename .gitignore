@@ -5,6 +5,7 @@
 build
 
 bin
+data
 .vscode
 result.txt
 statistics.txt
