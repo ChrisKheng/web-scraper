@@ -5,13 +5,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import com.sun.java.util.jar.pack.ConstantPool;
-
 public class Cleaner extends Thread {
     private IndexURLTree tree;
-    private List<List<String>> buffers;
+    private List<List<Pair<String,String>>> buffers;
 
-    public Cleaner(IndexURLTree tree, List<List<String>> buffers) {
+    public Cleaner(IndexURLTree tree, List<List<Pair<String,String>>> buffers) {
         this.tree = tree;
         this.buffers = buffers;
     }
@@ -25,9 +23,8 @@ public class Cleaner extends Thread {
     }
 
     public void writeRemainingToTree() {
-        // TODO: include HTML content from buffer
         buffers.forEach(buffer -> {
-            buffer.forEach(url -> tree.addURLandContent(url, ""));
+            buffer.forEach(pair -> tree.addURLandContent(pair.head(), pair.tail()));
         });
     }
 
@@ -39,10 +36,10 @@ public class Cleaner extends Thread {
             FileWriter writer = new FileWriter(file);
 
             // TODO: traverse entire directory tree to write URLs (and HTML?) into file
-            for (String url : tree) {
-                writer.write(url);
-                writer.write("\n");
-            }
+            // for (String url : tree) {
+            //     writer.write(url);
+            //     writer.write("\n");
+            // }
 
            writer.close();
         } catch (IOException e) {

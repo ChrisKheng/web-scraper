@@ -18,6 +18,11 @@ public class IndexURLTree {
 
     }
 
+    // A stub method
+    public long size() {
+        return 0;
+    }
+
     public void addURLandContent(String url, String content) {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);

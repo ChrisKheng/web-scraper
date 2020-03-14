@@ -34,9 +34,9 @@ public class StatsWriter extends Thread {
             while (true) {
                 try{
                     // sleeps thread for 1 hour (currently 1 second for testing)
-                    int pastSize = tree.size();
+                    long pastSize = tree.size();
                     Thread.sleep(1000);//*60*60);
-                    int newSize = tree.size();
+                    long newSize = tree.size();
                     writer.write(String.format("%d new urls found", newSize - pastSize));
                 } catch(Exception e) {
                     e.printStackTrace();

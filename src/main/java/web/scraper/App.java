@@ -4,13 +4,16 @@
 package web.scraper;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.*;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class App {
     // TreeSet and LinkedList is NOT thread safe!!!
@@ -21,7 +24,7 @@ public class App {
     // We can try ConcurrentLinkedQueue for buffers instead
     private Logger logger;
     private IndexURLTree tree;
-    private List<List<String>> buffers;
+    private List<List<Pair<String, String>>> buffers;
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -94,6 +97,17 @@ public class App {
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
         Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
+
+        try {
+            // Configure logger to write to external log file
+            // TODO: Should this be removed? As the log file can be very large if run for the whole day.
+            FileHandler handler = new FileHandler("./log.txt");
+            SimpleFormatter formatter = new SimpleFormatter();
+            handler.setFormatter(formatter);
+            Logger.getLogger("").addHandler(handler);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Read urls from seed file.

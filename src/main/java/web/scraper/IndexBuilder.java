@@ -1,20 +1,17 @@
 package web.scraper;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 public class IndexBuilder extends Thread {
 
-//    private TreeSet<String> tree;
     private IndexURLTree tree;
-    private LinkedList<String> buffer;
+    private List<Pair<String, String>> buffer;
     private Logger logger = Logger.getLogger("IndexBuilder");
 
-    public IndexBuilder(IndexURLTree tree, List<String> buffer) {
+    public IndexBuilder(IndexURLTree tree, List<Pair<String, String>> buffer) {
         this.tree = tree;
-        this.buffer = (LinkedList<String>) buffer;
+        this.buffer = buffer;
     }
 
     @Override
@@ -25,7 +22,7 @@ public class IndexBuilder extends Thread {
             // logger.info(Integer.toString(buffer.size()));
 
             if (buffer.size() > 0) {
-                String data = readBUL();
+                Pair<String, String> data = readBUL();
                 writeIUT(data);
             } else {
                 try {
@@ -36,17 +33,12 @@ public class IndexBuilder extends Thread {
         }
     }
 
-    public String readBUL() {
-        //TODO: Get both the URL and HTML content and return both
-        String data = buffer.removeFirst();
-        return data;
+    public Pair<String,String> readBUL() {
+        return buffer.remove(0);
     }
 
-    public void writeIUT(String data) {
-        //TODO: Write code
-        //TODO: Include HTML content into parameter once Crawler gets HTML content
-        tree.addURLandContent(data, "");
-        logger.info(data);
+    public void writeIUT(Pair<String, String> data) {
+        tree.addURLandContent(data.head(), data.tail());
+        logger.info(data.head());
     }
-
 }
