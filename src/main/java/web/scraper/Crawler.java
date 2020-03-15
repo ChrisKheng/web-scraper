@@ -132,13 +132,15 @@ public class Crawler extends Thread {
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
 
                 try {
-                if (isValidUrl(url) && tree.isDuplicate(url)) {
-                    queue.add(url);
-                    count++;
-                }
+                    if (tree.isDuplicate(url)) {
+                        queue.add(url);
+                        count++;
+                    } else {
+                        // logger.info(String.format("%s invalid url %s", threadName, url));
+                    }
                 } catch (Exception e) {
-                   logger.warning(String.format("%s index out of bound %s", threadName, url));
-                   e.printStackTrace();
+                    logger.warning(String.format("%s url cause exception %s", threadName, url));
+                    e.printStackTrace();
                 }
            }
         }

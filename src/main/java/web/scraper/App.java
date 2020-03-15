@@ -47,7 +47,9 @@ public class App {
         Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2));
         Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2));
 
-        IndexBuilder indexBuilder = new IndexBuilder(tree, this.buffers.get(0));
+        IndexBuilder builder1 = new IndexBuilder(tree, this.buffers.get(0));
+        IndexBuilder builder2 = new IndexBuilder(tree, this.buffers.get(1));
+        IndexBuilder builder3 = new IndexBuilder(tree, this.buffers.get(2));
 
         crawler1.start();
         crawler2.start();
@@ -59,14 +61,14 @@ public class App {
         // Commented out ib thread start() so that the program will terminate after all crawler threads have
         // returned.
         // If the ib thread is still running, the program will not terminate.
-        Thread ib1 = new Thread(indexBuilder);
-        // ib1.start();
+        builder1.start();
+        builder2.start();
+        builder3.start();
 
         // what is this for?
         Thread stats = new StatsWriter(tree);
         stats.start();
         
-
         try {
             crawler1.join();
             logger.info(String.format("crawler %d joined...............................", crawler1.getId()));

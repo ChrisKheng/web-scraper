@@ -27,6 +27,8 @@ public class IndexURLTree {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
 
+        System.out.println(path);
+
         File f = new File(path);
         if (f.exists()) {
             // file already exist
@@ -50,6 +52,9 @@ public class IndexURLTree {
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
         String path = getPathFromUrl(url);
+
+        System.out.print(path);
+
         File f = new File(path);
         return f.exists();
     }
