@@ -148,7 +148,11 @@ public class IndexURLTree {
         String[] webpage = url_second_split[0].split("\\.");
 
         // a/b/c --> [a, b, c]
-        String[] extension = url_second_split[1].split("/");
+        // By Yau Dong: Temporary fix for index out of bound exception
+        String[] extension = new String[0];
+        if (url_second_split.length > 1) {
+            extension = url_second_split[1].split("/");
+        }
 
         return new ArrayList<>(Arrays.asList(header, webpage, extension));
     }
