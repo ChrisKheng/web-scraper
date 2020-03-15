@@ -2,6 +2,8 @@ package web.scraper;
 
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.net.MalformedURLException;
 
@@ -16,6 +18,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Crawler extends Thread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
+    private static final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
     private WebClient client;
     private Logger logger;
     private List<String> queue;
@@ -55,9 +58,9 @@ public class Crawler extends Thread {
             counter++;
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
+            // Get the url, visit and retrieve the html page of the url
+            String searchUrl = queue.remove(0);            
             try {
-                // Get the url, visit and retrieve the html page of the url
-                String searchUrl = queue.remove(0);
                 HtmlPage page = client.getPage(searchUrl);
                 Pair<String, String> pair = new Pair<>(searchUrl, page.asXml());
 
@@ -70,8 +73,24 @@ public class Crawler extends Thread {
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
 
                 processUrls(urls);
-            } catch (Exception e) {
+            } catch (Exception e) {                
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
+
+                // Extract the root of the url and add it to the queue instead
+                Matcher m = rootPattern.matcher(searchUrl);
+                if (m.find()) {
+                    String rootUrl = m.group(0);
+
+                    if (queue.contains(rootUrl)) {
+                        String message = String.format("skipping as queue already has %s", rootUrl);
+                        logger.info(String.format("%s %s", threadName, message));
+                        continue;
+                    }                    
+
+                    queue.add(rootUrl);
+                    String message = String.format("extract root url instead %s", rootUrl);
+                    logger.info(String.format("%s %s", threadName, message));
+                }                
             }
         }
 
@@ -111,11 +130,17 @@ public class Crawler extends Thread {
                 // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
                 // by tree.add(url) as false is returned if the tree already has the url.
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
+
+                try {
                 if (isValidUrl(url) && tree.isDuplicate(url)) {
                     queue.add(url);
                     count++;
                 }
-            }
+                } catch (Exception e) {
+                   logger.warning(String.format("%s index out of bound %s", threadName, url));
+                   e.printStackTrace();
+                }
+           }
         }
 
         logger.info(String.format("%s %d urls are new", threadName, count));
