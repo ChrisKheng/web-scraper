@@ -6,10 +6,10 @@ import java.util.logging.Logger;
 public class IndexBuilder extends Thread {
 
     private IndexURLTree tree;
-    private List<Pair<String, String>> buffer;
+    private List<Data> buffer;
     private Logger logger = Logger.getLogger("IndexBuilder");
 
-    public IndexBuilder(IndexURLTree tree, List<Pair<String, String>> buffer) {
+    public IndexBuilder(IndexURLTree tree, List<Data> buffer) {
         this.tree = tree;
         this.buffer = buffer;
     }
@@ -22,7 +22,7 @@ public class IndexBuilder extends Thread {
             // logger.info(Integer.toString(buffer.size()));
 
             if (buffer.size() > 0) {
-                Pair<String, String> data = readBUL();
+                Data data = readBUL();
                 writeIUT(data);
             } else {
                 try {
@@ -33,12 +33,12 @@ public class IndexBuilder extends Thread {
         }
     }
 
-    public Pair<String,String> readBUL() {
+    public Data readBUL() {
         return buffer.remove(0);
     }
 
-    public void writeIUT(Pair<String, String> data) {
-        tree.addURLandContent(data.head(), data.tail());
-        logger.info(data.head());
+    public void writeIUT(Data data) {
+        tree.addURLandContent(data.getNewUrl(), data.getDocument());
+        logger.info(data.getNewUrl());
     }
 }

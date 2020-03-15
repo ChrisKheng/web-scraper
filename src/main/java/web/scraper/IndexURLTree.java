@@ -39,6 +39,7 @@ public class IndexURLTree {
             f.getParentFile().mkdirs();
             if (f.createNewFile()) {
                 // file did not exist, file created
+                System.out.println(path);
                 writeDataToFile(f, content);
             } else {
                 // file did exist, file did not create

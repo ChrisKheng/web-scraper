@@ -24,7 +24,7 @@ public class App {
     // We can try ConcurrentLinkedQueue for buffers instead
     private Logger logger;
     private IndexURLTree tree;
-    private List<List<Pair<String, String>>> buffers;
+    private List<List<Data>> buffers;
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -37,8 +37,8 @@ public class App {
         logger.info("Starting........ =D");
         initialise();
 
-        List<String> seeds = getURLSeeds();
-        List<List<String>> queues = splitList(seeds, 6);
+        List<Seed> seeds = getURLSeeds();
+        List<List<Seed>> queues = splitList(seeds, 6);
 
         Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
         Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
@@ -113,24 +113,28 @@ public class App {
     }
 
     // Read urls from seed file.
-    public List<String> getURLSeeds() {
+    public List<Seed> getURLSeeds() {
         InputStreamReader reader = new InputStreamReader(System.in);
         BufferedReader bufReader = new BufferedReader(reader);
-        return bufReader.lines().collect(Collectors.toList());
+        List<Seed> seeds = new LinkedList<>();
+
+        bufReader.lines().forEach(url -> seeds.add(new Seed("", url)));
+
+        return seeds;
     }
 
     // Split the given url list into the specified number of subLists
     // Condition: number of urls in list given >= num of sublists
-    public List<List<String>> splitList(List<String> list, int numSubLists) {
+    public List<List<Seed>> splitList(List<Seed> list, int numSubLists) {
         int portionSize = list.size() / numSubLists;
 
-        List<List<String>> result = new LinkedList<>();
-        List<String> temp = new LinkedList<>();
+        List<List<Seed>> result = new LinkedList<>();
+        List<Seed> temp = new LinkedList<>();
         int count = 0;
         int currNumSubLists = 0;
 
-        for (String url : list) {
-            temp.add(url);
+        for (Seed seed : list) {
+            temp.add(seed);
             count++;
 
             if (count == portionSize && currNumSubLists < numSubLists - 1) {

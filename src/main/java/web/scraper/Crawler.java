@@ -21,12 +21,12 @@ public class Crawler extends Thread {
     private static final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
     private WebClient client;
     private Logger logger;
-    private List<String> queue;
+    private List<Seed> queue;
     private IndexURLTree tree;
-    private List<Pair<String, String>> buffer;
+    private List<Data> buffer;
     private String threadName;
 
-    public Crawler(List<String> seeds, IndexURLTree tree, List<Pair<String, String>> buffer) {
+    public Crawler(List<Seed> seeds, IndexURLTree tree, List<Data> buffer) {
         this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
@@ -59,38 +59,45 @@ public class Crawler extends Thread {
             logger.info(String.format("%s curr iteration %d", threadName, counter));
 
             // Get the url, visit and retrieve the html page of the url
-            String searchUrl = queue.remove(0);            
             try {
+                // Get the url, visit and retrieve the html page of the url
+                Seed seed = queue.remove(0);
+                String sourceUrl = seed.getSourceUrl();
+                String searchUrl = seed.getNewUrl();
                 HtmlPage page = client.getPage(searchUrl);
-                Pair<String, String> pair = new Pair<>(searchUrl, page.asXml());
 
-                // Synchronises accesses between the crawler threads which share the same buffer
-                synchronized (buffer) {
-                    buffer.add(pair);
+                // Add to buffer
+                if (!sourceUrl.isEmpty()) {
+                    Data newData = new Data(sourceUrl, searchUrl, page.asXml());
+
+                    // Synchronises accesses between the crawler threads which share the same buffer
+                    synchronized (buffer) {
+                        buffer.add(newData);
+                    }
                 }
 
                 List<String> urls = getUrls(page);
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
 
-                processUrls(urls);
-            } catch (Exception e) {                
+               processUrls(searchUrl, urls);
+            } catch (Exception e) {
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
 
                 // Extract the root of the url and add it to the queue instead
-                Matcher m = rootPattern.matcher(searchUrl);
-                if (m.find()) {
-                    String rootUrl = m.group(0);
+            //     Matcher m = rootPattern.matcher(searchUrl);
+            //     if (m.find()) {
+            //         String rootUrl = m.group(0);
 
-                    if (queue.contains(rootUrl)) {
-                        String message = String.format("skipping as queue already has %s", rootUrl);
-                        logger.info(String.format("%s %s", threadName, message));
-                        continue;
-                    }                    
+            //         if (queue.contains(rootUrl)) {
+            //             String message = String.format("skipping as queue already has %s", rootUrl);
+            //             logger.info(String.format("%s %s", threadName, message));
+            //             continue;
+            //         }                    
 
-                    queue.add(rootUrl);
-                    String message = String.format("extract root url instead %s", rootUrl);
-                    logger.info(String.format("%s %s", threadName, message));
-                }                
+            //         queue.add(rootUrl);
+            //         String message = String.format("extract root url instead %s", rootUrl);
+            //         logger.info(String.format("%s %s", threadName, message));
+            //     }                
             }
         }
 
@@ -118,7 +125,7 @@ public class Crawler extends Thread {
     }
 
     // Write the new urls found to the queue if the tree does not already contain the url given.
-    public void processUrls(List<String> urls) {
+    public void processUrls(String searchUrl, List<String> urls) {
         logger.info(String.format("%s processing urls...", threadName));
 
         int count = 0;
@@ -130,17 +137,9 @@ public class Crawler extends Thread {
                 // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
                 // by tree.add(url) as false is returned if the tree already has the url.
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
-
-                try {
-                    if (tree.isDuplicate(url)) {
-                        queue.add(url);
-                        count++;
-                    } else {
-                        // logger.info(String.format("%s invalid url %s", threadName, url));
-                    }
-                } catch (Exception e) {
-                    logger.warning(String.format("%s url cause exception %s", threadName, url));
-                    e.printStackTrace();
+               if (isValidUrl(url) && tree.isDuplicate(url)) {
+                    queue.add(new Seed(searchUrl, url));
+                    count++;
                 }
            }
         }

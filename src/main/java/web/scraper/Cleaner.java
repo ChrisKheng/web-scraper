@@ -7,9 +7,9 @@ import java.util.List;
 
 public class Cleaner extends Thread {
     private IndexURLTree tree;
-    private List<List<Pair<String,String>>> buffers;
+    private List<List<Data>> buffers;
 
-    public Cleaner(IndexURLTree tree, List<List<Pair<String,String>>> buffers) {
+    public Cleaner(IndexURLTree tree, List<List<Data>> buffers) {
         this.tree = tree;
         this.buffers = buffers;
     }
@@ -24,7 +24,7 @@ public class Cleaner extends Thread {
 
     public void writeRemainingToTree() {
         buffers.forEach(buffer -> {
-            buffer.forEach(pair -> tree.addURLandContent(pair.head(), pair.tail()));
+            buffer.forEach(data -> tree.addURLandContent(data.getSourceUrl() , data.getDocument()));
         });
     }
 
