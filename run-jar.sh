@@ -1,3 +1,8 @@
+# Delete old output files first
+rm result.txt
+rm result2.txt
+rm statistics.txt
+
 # Build the jar file first
 ./gradlew shadowJar
 

@@ -33,14 +33,16 @@ public class App {
         this.tree = new IndexURLTree();
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
+        this.queues = new LinkedList<>();
     }
 
     public void run() {
         logger.info("Starting........ =D");
         initialise();
 
+        // Need to use addAll instead of directly assigining to queues because initialise() is put before getURLSeeds()
         List<Seed> seeds = getURLSeeds();
-        List<List<Seed>> queues = splitList(seeds, 6);
+        this.queues.addAll(splitList(seeds, 6));
 
         Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0));
         Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0));
@@ -96,7 +98,7 @@ public class App {
     
 
     public void initialise() {
-        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers));
+        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers, this.queues));
 
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
