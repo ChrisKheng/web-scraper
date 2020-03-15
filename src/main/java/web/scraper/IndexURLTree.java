@@ -125,10 +125,10 @@ public class IndexURLTree {
     }
 
     // This method takes in a url and breaks it down into 3 parts
-    // Header, webpage, and extension
-    // Header is the http://
-    // webpage is abc.com
-    // extension is /page1/2/3
+    // protocol, domain, and directory
+    // protocol is the http://
+    // domain is abc.com
+    // directory is /page1/2/3
     // This method should be the method that controls the depth of our tree. Breakdown more = more depth
     // breakdown less = less depth
     private ArrayList<String[]> breakdownUrl(String url) {
@@ -136,43 +136,44 @@ public class IndexURLTree {
         // Split url by the ://
         // So we go from http://abc.com/a/b/c to an array with the following [http, abc.com/a/b/c]
         String[] url_first_split = url.split("://", 2);
-        String[] header = new String[1];
-        header[0] = url_first_split[0];
+        String[] protocol = new String[1];
+        protocol[0] = url_first_split[0];
 
-        // Split url without header by /
-        // This separates out the website address, and the extension behind.
+        // Split url without protocol by /
+        // This separates out the website address, and the directory behind.
         // abc.com/a/b/c --> [abc.com, a/b/c]
         String[] url_second_split = url_first_split[1].split("/", 2);
 
         // abc.com --> [abc, com]
-        String[] webpage = url_second_split[0].split("\\.");
+        String[] domain = url_second_split[0].split("\\.");
 
         // a/b/c --> [a, b, c]
-        // By Yau Dong: Temporary fix for index out of bound exception
-        String[] extension = new String[0];
+        String[] directory = null;
         if (url_second_split.length > 1) {
-            extension = url_second_split[1].split("/");
+            directory = url_second_split[1].split("/");
+        } else {
+            directory = new String[0];
         }
 
-        return new ArrayList<>(Arrays.asList(header, webpage, extension));
+        return new ArrayList<>(Arrays.asList(protocol, domain, directory));
     }
 
     private String getPathFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
-        String[] header = breakdown.get(0);
-        String[] webpage = breakdown.get(1);
-        String[] extension = breakdown.get(2);
+        String[] protocol = breakdown.get(0);
+        String[] domain = breakdown.get(1);
+        String[] directory = breakdown.get(2);
 
         StringBuilder builder = new StringBuilder();
         builder.append(ROOT_DIRECTORY + "/");
-        for (int i = 0; i < header.length; i++) {
-            builder.append(header[i] + "/");
+        for (int i = 0; i < protocol.length; i++) {
+            builder.append(protocol[i] + "/");
         }
-        for (int i = 0; i < webpage.length; i++) {
-            builder.append(webpage[i] + "/");
+        for (int i = 0; i < domain.length; i++) {
+            builder.append(domain[i] + "/");
         }
-        for (int i = 0; i < extension.length; i++) {
-            builder.append(extension[i] + "/");
+        for (int i = 0; i < directory.length; i++) {
+            builder.append(directory[i] + "/");
         }
         builder.append(HTML_FILENAME);
         return builder.toString();
@@ -227,7 +228,7 @@ public class IndexURLTree {
 //        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
 //        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
         IUT.testAddURLandContent(
-            "http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf",
+            "http://www.academia.edu.au",
             "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -243,13 +244,13 @@ public class IndexURLTree {
 
     public void testBreakdownUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
-        String[] header = breakdown.get(0);
-        String[] webpage = breakdown.get(1);
-        String[] extension = breakdown.get(2);
+        String[] protocol = breakdown.get(0);
+        String[] domain = breakdown.get(1);
+        String[] directory = breakdown.get(2);
         System.out.println(url);
-        System.out.println(Arrays.toString(header));
-        System.out.println(Arrays.toString(webpage));
-        System.out.println(Arrays.toString(extension));
+        System.out.println(Arrays.toString(protocol));
+        System.out.println(Arrays.toString(domain));
+        System.out.println(Arrays.toString(directory));
     }
 
     public void testNavigateDirectory(String url) {
