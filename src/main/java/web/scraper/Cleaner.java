@@ -42,7 +42,13 @@ public class Cleaner extends Thread {
 
     public void writeRemainingToTree() {
         buffers.forEach(buffer -> {
-            buffer.forEach(data -> tree.addURLandContent(data.getSourceUrl() , data.getDocument()));
+            buffer.forEach(data -> {
+                try {
+                    tree.addURLandContent(data.getNewUrl() , data.getDocument());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         });
     }
 

@@ -1,6 +1,7 @@
 package web.scraper;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,12 +25,18 @@ public class Crawler extends Thread {
     private List<Seed> queue;
     private IndexURLTree tree;
     private List<Data> buffer;
+    private Semaphore crawlerSemaphore;
+    private Semaphore builderSemaphore;
     private String threadName;
 
-    public Crawler(List<Seed> seeds, IndexURLTree tree, List<Data> buffer) {
+    public Crawler(List<Seed> seeds, IndexURLTree tree, List<Data> buffer, Semaphore crawlerSemaphore,
+        Semaphore builderSemaphore) {
         this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
+        this.crawlerSemaphore = crawlerSemaphore;
+        this.builderSemaphore = builderSemaphore;
+
         this.logger = Logger.getLogger("Crawler thread");
 
         // Creates a new web client to visit the internet.
@@ -44,7 +51,7 @@ public class Crawler extends Thread {
         // Must put this here cuz if put in constructor, then currentThread is the
         // thread that initialises the crawler
         // , not the real crawler thread itself.
-        this.threadName = String.format("Thread %d", Thread.currentThread().getId());
+        this.threadName = String.format("Crawler %d", Thread.currentThread().getId());
 
         logger.info(String.format("%s receive %d initial urls", threadName, queue.size()));
         int counter = 0;
@@ -65,17 +72,24 @@ public class Crawler extends Thread {
 
             try {
                 HtmlPage page = client.getPage(searchUrl);
-
-                // Add to buffer
-                if (!sourceUrl.isEmpty()) {
-                    Data newData = new Data(sourceUrl, searchUrl, page.asXml());
-                    buffer.add(newData);
-                }
-
                 List<String> urls = getUrls(page);
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
-
                 processUrls(searchUrl, urls);
+
+                // Add to buffer (need to put inside the if statement)
+                crawlerSemaphore.acquire();
+                logger.info(String.format("%s %s", this.threadName, "Entering critical section............."));
+
+                Data newData = new Data(sourceUrl, searchUrl, page.asXml());
+                buffer.add(newData);
+
+                // if (!sourceUrl.isEmpty()) {
+                //     Data newData = new Data(sourceUrl, searchUrl, page.asXml());
+                //     buffer.add(newData);
+                // }
+
+                builderSemaphore.release();
+                logger.info(String.format("%s %s", this.threadName, "Leaving critical section............."));
             } catch (Exception e) {
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
                 handle404Issue(searchUrl);
@@ -142,6 +156,7 @@ public class Crawler extends Thread {
                 // by tree.add(url) as false is returned if the tree already has the url.
                 // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
                 try {
+                    // Remember should be if it is NOT duplicate
                     if (isValidUrl(url) && !tree.isDuplicate(url)) {
                         queue.add(new Seed(searchUrl, url));
                         count++;
