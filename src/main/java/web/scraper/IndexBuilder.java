@@ -21,6 +21,7 @@ public class IndexBuilder extends Thread {
         while (true) {
             // logger.info(Integer.toString(buffer.size()));
 
+
             if (buffer.size() > 0) {
                 Data data = readBUL();
                 writeIUT(data);
@@ -39,6 +40,8 @@ public class IndexBuilder extends Thread {
 
     public void writeIUT(Data data) {
         tree.addURLandContent(data.getNewUrl(), data.getDocument());
+
+        logger.info("IndexBuilder write....................");
         logger.info(data.getNewUrl());
     }
 }

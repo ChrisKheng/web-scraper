@@ -16,9 +16,21 @@ public class Cleaner extends Thread {
 
     public void run() {
         System.out.println("\nStart cleaning............................");
-        writeRemainingToTree();
-        writeFromTreeToDisk();
-        writeStatsToDisk();
+
+        int size = buffers.stream().mapToInt(buffer -> buffer.size()).sum();
+
+        boolean isEmpty = true;
+        for (List<Data> buffer: buffers) {
+            if (!buffer.isEmpty()) {
+                isEmpty = false;
+            }
+        }
+
+        System.out.printf("Found %s urls", isEmpty);
+
+        // // writeRemainingToTree();
+        // writeFromTreeToDisk();
+        // writeStatsToDisk();
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 

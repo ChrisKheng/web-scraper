@@ -27,8 +27,6 @@ public class IndexURLTree {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
 
-        System.out.println(path);
-
         File f = new File(path);
         if (f.exists()) {
             // file already exist
@@ -39,7 +37,6 @@ public class IndexURLTree {
             f.getParentFile().mkdirs();
             if (f.createNewFile()) {
                 // file did not exist, file created
-                System.out.println(path);
                 writeDataToFile(f, content);
             } else {
                 // file did exist, file did not create
@@ -54,10 +51,15 @@ public class IndexURLTree {
         //TODO: Check if URL is already stored
         String path = getPathFromUrl(url);
 
-        System.out.print(path);
-
         File f = new File(path);
-        return f.exists();
+
+        boolean exist = f.exists();
+
+        if (exist) {
+            System.out.printf("Exist ............\n%s\n", path);
+        }
+        
+        return exist;
     }
 
     private void writeDataToFile(File f, String data) throws IOException {

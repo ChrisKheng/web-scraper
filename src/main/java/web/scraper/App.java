@@ -6,6 +6,7 @@ package web.scraper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
@@ -25,12 +26,13 @@ public class App {
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
+    private List<List<Seed>> queues;
 
     public App() {
         this.logger = Logger.getLogger("App");
         this.tree = new IndexURLTree();
         this.buffers = new LinkedList<>();
-        IntStream.range(0, 3).forEach(x -> buffers.add(new LinkedList<>()));
+        IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
     }
 
     public void run() {
@@ -61,9 +63,9 @@ public class App {
         // Commented out ib thread start() so that the program will terminate after all crawler threads have
         // returned.
         // If the ib thread is still running, the program will not terminate.
-        builder1.start();
-        builder2.start();
-        builder3.start();
+        // builder1.start();
+        // builder2.start();
+        // builder3.start();
 
         // what is this for?
         Thread stats = new StatsWriter(tree);

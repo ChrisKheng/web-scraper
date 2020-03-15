@@ -21,4 +21,15 @@ public class Seed {
     public String toString() {
         return String.format("(%s, %s)", sourceUrl, newUrl);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Seed)) {
+            return false;
+        }
+
+        Seed s = (Seed) o;
+
+        return sourceUrl.equals(s.sourceUrl) && newUrl.equals(s.newUrl);
+    }
 }
