@@ -75,31 +75,37 @@ public class Crawler extends Thread {
                 List<String> urls = getUrls(page);
                 logger.info(String.format("%s found %d urls", threadName, urls.size()));
 
-               processUrls(searchUrl, urls);
+                processUrls(searchUrl, urls);
             } catch (Exception e) {
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
-
-                // Extract the root of the url and add it to the queue instead
-                // Abstract this way
-                Matcher m = rootPattern.matcher(searchUrl);
-                if (m.find()) {
-                    String rootUrl = m.group(0);
-                    Seed newSeed = new Seed(searchUrl ,rootUrl);
-
-                    if (queue.contains(newSeed)) {
-                        String message = String.format("skipping as queue already has %s", rootUrl);
-                        logger.info(String.format("%s %s", threadName, message));
-                        continue;
-                    }                    
-
-                    queue.add(newSeed);
-                    String message = String.format("extract root url instead %s", rootUrl);
-                    logger.info(String.format("%s %s", threadName, message));
-                }                
-            }
+                handle404Issue(searchUrl);
+           }
         }
 
         logger.info(String.format("%s exiting......", threadName));
+    }
+
+    // Extract the root of the url and add it to the queue instead
+    private void handle404Issue(String searchUrl) {
+        Matcher m = rootPattern.matcher(searchUrl);
+
+        // If the url does not match the rootPattern
+        if (!m.find()) {
+            return;
+        }
+
+        String rootUrl = m.group(0);
+        Seed newSeed = new Seed(searchUrl ,rootUrl);
+
+        // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
+        if (this.queue.contains(newSeed)) {
+            String message = String.format("skipping as queue already has %s", rootUrl);
+            logger.info(String.format("%s %s", threadName, message));
+        } else {
+            this.queue.add(newSeed);
+            String message = String.format("extract root url instead %s", rootUrl);
+            logger.info(String.format("%s %s", threadName, message));
+        }                    
     }
 
     // Returns all the urls in the html page given.

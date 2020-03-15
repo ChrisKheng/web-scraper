@@ -30,6 +30,8 @@ public class Seed {
 
         Seed s = (Seed) o;
 
-        return sourceUrl.equals(s.sourceUrl) && newUrl.equals(s.newUrl);
+        // Only need to compare the new url as this is to check whether should the new url be
+        // added to the crawler's queue
+        return newUrl.equals(s.newUrl);
     }
 }
