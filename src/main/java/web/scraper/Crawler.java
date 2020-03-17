@@ -79,22 +79,19 @@ public class Crawler extends CustomThread {
                 logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
                 processUrls(searchUrl, urls);
 
-                // Add to buffer (need to put inside the if statement)
-                crawlerSemaphore.acquire();
-                logger.info(getFormattedMessage(String.format("entering critical section.............")));
+                if (!sourceUrl.isEmpty()) {
+                    // Add to buffer (need to put inside the if statement)
+                    crawlerSemaphore.acquire();
+                    logger.info(getFormattedMessage(String.format("entering critical section.............")));
 
-                Data newData = new Data(sourceUrl, searchUrl, page.asXml());
-                buffer.add(newData);
+                    Data newData = new Data(sourceUrl, searchUrl, page.asXml());
+                    buffer.add(newData);
 
-                // if (!sourceUrl.isEmpty()) {
-                // Data newData = new Data(sourceUrl, searchUrl, page.asXml());
-                // buffer.add(newData);
-                // }
-
-                builderSemaphore.release();
-                logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
+                    builderSemaphore.release();
+                    logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
+                }
             } catch (FailingHttpStatusCodeException e) {
-                logger.warning(getFormattedMessage(String.format(e.getMessage())));
+                logger.warning(getFormattedMessage(e.getMessage()));
                 handle404Issue(searchUrl);
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
                 MalformedURLException e) {
