@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.concurrent.Semaphore;
 import java.util.stream.*;
 import java.util.logging.FileHandler;
@@ -19,17 +18,12 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 public class App {
-    // TreeSet and LinkedList is NOT thread safe!!!
-    // Visit
-    // https://riptutorial.com/java/example/30472/treemap-and-treeset-thread-safety
-    // for how to ensure thread safety using TreeSet.
-
-    // We can try ConcurrentLinkedQueue for buffers instead
+    // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 5;
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
-    private List<List<Seed>> queues;
+    private List<List<Seed>> queues; // synchronised in the App constructor
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -47,36 +41,42 @@ public class App {
         List<Seed> seeds = getURLSeeds();
         this.queues.addAll(splitList(seeds, 6));
 
-        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores(1);
-        List<Semaphore> builderSemaphores = getBuilderSempahores(1);
+        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores(3);
+        List<Semaphore> builderSemaphores = getBuilderSempahores(3);
 
         Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0), crawlerSemaphores.get(0),
             builderSemaphores.get(0));
         Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0), crawlerSemaphores.get(0),
             builderSemaphores.get(0));
-        // Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1));
-        // Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1));
-        // Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2));
-        // Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2));
+        Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1), crawlerSemaphores.get(1), 
+            builderSemaphores.get(1));
+        Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1), crawlerSemaphores.get(1),
+            builderSemaphores.get(1));
+        Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2), crawlerSemaphores.get(2),
+            builderSemaphores.get(2));
+        Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2), crawlerSemaphores.get(2),
+            builderSemaphores.get(2));
 
         IndexBuilder builder1 = new IndexBuilder(tree, this.buffers.get(0), crawlerSemaphores.get(0),
             builderSemaphores.get(0));
-        // IndexBuilder builder2 = new IndexBuilder(tree, this.buffers.get(1));
-        // IndexBuilder builder3 = new IndexBuilder(tree, this.buffers.get(2));
+        IndexBuilder builder2 = new IndexBuilder(tree, this.buffers.get(1), crawlerSemaphores.get(1),
+            builderSemaphores.get(1));
+        IndexBuilder builder3 = new IndexBuilder(tree, this.buffers.get(2), crawlerSemaphores.get(2),
+            builderSemaphores.get(2));
 
         crawler1.start();
         crawler2.start();
-        // crawler3.start();
-        // crawler4.start();
-        // crawler5.start();
-        // crawler6.start();
+        crawler3.start();
+        crawler4.start();
+        crawler5.start();
+        crawler6.start();
 
         // Commented out ib thread start() so that the program will terminate after all crawler threads have
         // returned.
         // If the ib thread is still running, the program will not terminate.
         builder1.start();
-        // builder2.start();
-        // builder3.start();
+        builder2.start();
+        builder3.start();
 
         // what is this for?
         Thread stats = new StatsWriter(tree);
@@ -89,11 +89,11 @@ public class App {
             crawler2.join();
             logger.info(String.format("crawler %d joined...............................", crawler2.getId()));
 
-            // crawler3.join();
-            // logger.info(String.format("crawler %d joined...............................", crawler3.getId()));
+            crawler3.join();
+            logger.info(String.format("crawler %d joined...............................", crawler3.getId()));
 
-            // crawler4.join();
-            // logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
+            crawler4.join();
+            logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
 
             // crawler5.join();
             // logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
