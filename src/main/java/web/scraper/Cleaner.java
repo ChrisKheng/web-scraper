@@ -7,30 +7,54 @@ import java.util.List;
 
 public class Cleaner extends Thread {
     private IndexURLTree tree;
-    private List<List<Pair<String,String>>> buffers;
+    private List<List<Data>> buffers;
+    private List<List<Seed>> queues;
 
-    public Cleaner(IndexURLTree tree, List<List<Pair<String,String>>> buffers) {
+    public Cleaner(IndexURLTree tree, List<List<Data>> buffers, List<List<Seed>> queues) {
         this.tree = tree;
         this.buffers = buffers;
+        this.queues = queues;
     }
 
     public void run() {
         System.out.println("\nStart cleaning............................");
-        writeRemainingToTree();
+
+        int size = buffers.stream().mapToInt(buffer -> buffer.size()).sum();
+
+        boolean isEmpty = true;
+        for (List<Data> buffer: buffers) {
+            if (!buffer.isEmpty()) {
+                isEmpty = false;
+            }
+        }
+
+        if (isEmpty) {
+            System.out.printf("Buffers are still empty cuz initial seeds hasn't finished yet\n", isEmpty);
+        }
+
+        writeRemainingToTree();        
         writeFromTreeToDisk();
+        writeFromQueuesToDisk();
         writeStatsToDisk();
+
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
     public void writeRemainingToTree() {
         buffers.forEach(buffer -> {
-            buffer.forEach(pair -> tree.addURLandContent(pair.head(), pair.tail()));
+            buffer.forEach(data -> {
+                try {
+                    tree.addURLandContent(data.getNewUrl() , data.getDocument());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         });
     }
 
     public void writeFromTreeToDisk() {
         try {
-            File file = new File("./result.txt");
+            File file = new File("./res.txt");
             file.createNewFile();
 
             FileWriter writer = new FileWriter(file);
@@ -47,15 +71,38 @@ public class Cleaner extends Thread {
         } 
     }
 
+    // Temporary
+    private void writeFromQueuesToDisk() {
+        try {
+            File file = new File("./res2.txt");
+            file.createNewFile();
+            FileWriter writer = new FileWriter(file);            
+            writer.write("------------- Urls which are in the queues ------------\n");
+
+            for (List<Seed> queue : queues) {
+                for (Seed seed : queue) {
+                    writer.write(String.format("%s\n", seed.getNewUrl()));                    
+                }
+            }
+
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void writeStatsToDisk() {
         try {
             File file = new File("./statistics.txt");
             file.createNewFile();
-
             FileWriter writer = new FileWriter(file);
+
+            long numUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
+
             writer.write(".............Stats............\n");
             // TODO: add findURLs() method to calculate no. of URLs in IUT
-            writer.write(String.format("%d new urls are found.", tree.size()));
+            writer.write(String.format("%d new urls are found.\n", tree.size()));
+            writer.write(String.format("%d urls are in queues.\n", numUrls));
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();

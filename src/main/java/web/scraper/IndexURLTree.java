@@ -63,8 +63,16 @@ public class IndexURLTree {
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
         String path = getPathFromUrl(url);
+
         File f = new File(path);
-        return f.exists();
+
+        boolean exist = f.exists();
+
+        if (exist) {
+            System.out.printf("Exist ............\n%s\n", path);
+        }
+        
+        return exist;
     }
 
     private void writeDataToFile(File f, String data) throws IOException {
