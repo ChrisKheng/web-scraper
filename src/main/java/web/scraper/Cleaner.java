@@ -54,7 +54,7 @@ public class Cleaner extends Thread {
 
     public void writeFromTreeToDisk() {
         try {
-            File file = new File("./result.txt");
+            File file = new File("./res.txt");
             file.createNewFile();
 
             FileWriter writer = new FileWriter(file);
@@ -74,7 +74,7 @@ public class Cleaner extends Thread {
     // Temporary
     private void writeFromQueuesToDisk() {
         try {
-            File file = new File("./result2.txt");
+            File file = new File("./res2.txt");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);            
             writer.write("------------- Urls which are in the queues ------------\n");

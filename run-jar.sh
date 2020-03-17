@@ -1,6 +1,6 @@
 # Delete old output files first
-rm result.txt
-rm result2.txt
+rm res.txt
+rm res2.txt
 rm statistics.txt
 rm -r data
 
