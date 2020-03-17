@@ -6,8 +6,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.net.ConnectException;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -30,7 +33,7 @@ public class Crawler extends Thread {
     private String threadName;
 
     public Crawler(List<Seed> seeds, IndexURLTree tree, List<Data> buffer, Semaphore crawlerSemaphore,
-        Semaphore builderSemaphore) {
+            Semaphore builderSemaphore) {
         this.queue = seeds;
         this.tree = tree;
         this.buffer = buffer;
@@ -84,16 +87,22 @@ public class Crawler extends Thread {
                 buffer.add(newData);
 
                 // if (!sourceUrl.isEmpty()) {
-                //     Data newData = new Data(sourceUrl, searchUrl, page.asXml());
-                //     buffer.add(newData);
+                // Data newData = new Data(sourceUrl, searchUrl, page.asXml());
+                // buffer.add(newData);
                 // }
 
                 builderSemaphore.release();
                 logger.info(String.format("%s %s", this.threadName, "Leaving critical section............."));
-            } catch (Exception e) {
+            } catch (FailingHttpStatusCodeException e) {
                 logger.warning(String.format("%s %s", threadName, e.getMessage()));
                 handle404Issue(searchUrl);
-           }
+            } catch (UnknownHostException | ConnectException | MalformedURLException e) {
+                logger.warning(String.format("%s %s", threadName, e.getMessage()));
+            } catch (Exception e) {
+                logger.warning(String.format("%s exception: url %s", threadName, searchUrl));
+                logger.warning(String.format("%s exception: %s", threadName, e.getMessage()));
+                e.printStackTrace();
+            }
         }
 
         logger.info(String.format("%s exiting......", threadName));
@@ -109,7 +118,7 @@ public class Crawler extends Thread {
         }
 
         String rootUrl = m.group(0);
-        Seed newSeed = new Seed(searchUrl ,rootUrl);
+        Seed newSeed = new Seed(searchUrl, rootUrl);
 
         // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
         if (this.queue.contains(newSeed)) {
@@ -119,7 +128,7 @@ public class Crawler extends Thread {
             this.queue.add(newSeed);
             String message = String.format("extract root url instead %s", rootUrl);
             logger.info(String.format("%s %s", threadName, message));
-        }                    
+        }
     }
 
     // Returns all the urls in the html page given.
@@ -136,45 +145,46 @@ public class Crawler extends Thread {
                 return page.getFullyQualifiedUrl(relativePath).toString();
             } catch (MalformedURLException e) {
                 return "";
-           }
+            }
         }).filter(url -> !url.equals("")).collect(Collectors.toList());
 
         return urls;
     }
 
-    // Write the new urls found to the queue if the tree does not already contain the url given.
+    // Write the new urls found to the queue if the tree does not already contain
+    // the url given.
     public void processUrls(String searchUrl, List<String> urls) {
         logger.info(String.format("%s processing urls...", threadName));
 
         int count = 0;
 
-        // TODO - Check if the url also exists in all other crawler threads or not before adding to the 
+        // TODO - Check if the url also exists in all other crawler threads or not
+        // before adding to the
         // queue (here the entire for loop may need to be synchronised, check carefully)
         for (String url : urls) {
             synchronized (Crawler.class) {
-                // Add the url if it is a valid url and the tree does not already contain the url, which is indicated
+                // Add the url if it is a valid url and the tree does not already contain the
+                // url, which is indicated
                 // by tree.add(url) as false is returned if the tree already has the url.
-                // This order of checking may be better as it won't need to touch the tree if the url is not even valid.
-                try {
-                    // Remember should be if it is NOT duplicate
-                    if (isValidUrl(url) && !tree.isDuplicate(url)) {
-                        queue.add(new Seed(searchUrl, url));
-                        count++;
-                    }
-                } catch (Exception e) {
-                    // logger.warning(String.format("%s exception %s", threadName, url));
-                    e.printStackTrace();
+                // This order of checking may be better as it won't need to touch the tree if
+                // the url is not even valid.
+                // Remember should be if it is NOT duplicate
+                if (isValidUrl(url) && !tree.isDuplicate(url)) {
+                    queue.add(new Seed(searchUrl, url));
+                    count++;
                 }
-           }
+            }
         }
 
         logger.info(String.format("%s %d urls are new", threadName, count));
     }
-    
+
     // Checks if the url is a http link
     // Removes other links like javascript and mailto
     public boolean isValidUrl(String url) {
-        if (url.substring(0,4).equals("http")) return true;
-        else return false;
+        if (url.substring(0, 4).equals("http"))
+            return true;
+        else
+            return false;
     }
 }
