@@ -161,8 +161,9 @@ public class Crawler extends CustomThread {
             // This order of checking may be better as it won't need to touch the tree if
             // the url is not even valid.
             // Remember should be if it is NOT duplicate
-            if (isValidUrl(url) && !tree.isDuplicate(url)) {
-                queue.add(new Seed(searchUrl, url));
+            Seed seed = new Seed(searchUrl, url);
+            if (isValidUrl(url) && !tree.isDuplicate(url) && !queue.contains(seed)) {
+                queue.add(seed);
                 count++;
             }
         }
