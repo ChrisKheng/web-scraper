@@ -88,7 +88,7 @@ public class Cleaner extends Thread {
                     this.set.add(seed.getNewUrl());
                 }));
 
-            File file = new File("./res3.txt");
+            File file = new File("./res2.txt");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
             writer.write(String.format("Total size: %d\n", this.set.size()));
