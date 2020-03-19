@@ -10,12 +10,14 @@ public class IndexBuilder extends CustomThread {
     private Semaphore crawlerSemaphore;
     private Semaphore builderSempahore;
     private Logger logger = Logger.getLogger("IndexBuilder");
+    private long count; // For keep tracking the number of urls added to the tree (temporal implementation)
 
     public IndexBuilder(IndexURLTree tree, List<Data> buffer, Semaphore crawlerSemaphore, Semaphore builderSemaphore) {
         this.tree = tree;
         this.buffer = buffer;
         this.crawlerSemaphore = crawlerSemaphore;
         this.builderSempahore = builderSemaphore;
+        this.count = 0;
     }
 
     @Override
@@ -44,9 +46,15 @@ public class IndexBuilder extends CustomThread {
     }
 
     public void writeIUT(Data data) {
-        tree.addURLandContent(data.getNewUrl(), data.getDocument());
+        if (tree.addURLandContent(data.getNewUrl(), data.getDocument())) {
+            this.count++;
+        }
 
         logger.info(getFormattedMessage("write...................."));
         logger.info(data.getNewUrl());
+    }
+
+    public long getCount() {
+        return count;
     }
 }

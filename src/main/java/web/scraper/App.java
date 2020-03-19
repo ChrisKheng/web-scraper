@@ -19,11 +19,12 @@ import java.util.logging.SimpleFormatter;
 
 public class App {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 5;
+    public static final int BUFFER_SIZE = 1000;
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
     private List<List<Seed>> queues; // synchronised in the App constructor
+    private List<IndexBuilder> builders;
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -31,6 +32,7 @@ public class App {
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
+        this.builders = new LinkedList<>();
     }
 
     public void run() {
@@ -63,6 +65,9 @@ public class App {
             builderSemaphores.get(1));
         IndexBuilder builder3 = new IndexBuilder(tree, this.buffers.get(2), crawlerSemaphores.get(2),
             builderSemaphores.get(2));
+        builders.add(builder1);
+        builders.add(builder2);
+        builders.add(builder3);
 
         crawler1.start();
         crawler2.start();
@@ -95,18 +100,18 @@ public class App {
             crawler4.join();
             logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
 
-            // crawler5.join();
-            // logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
+            crawler5.join();
+            logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
 
-            // crawler6.join();
-            // logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
+            crawler6.join();
+            logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
         } catch (InterruptedException e) {
             logger.severe(e.getMessage());
         }
     }
     
     public void initialise() {
-        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers, this.queues));
+        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers, this.queues, this.builders));
 
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);

@@ -30,14 +30,14 @@ public class IndexURLTree {
      * @param url     contains at least protocol and domain at minimum
      * @param content the http content of the url
      */
-    public void addURLandContent(String url, String content) {
+    public boolean addURLandContent(String url, String content) {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
 
         File f = new File(path);
         if (f.exists()) {
             // file already exist
-            return;
+            return false;
         }
 
         try {
@@ -45,13 +45,15 @@ public class IndexURLTree {
             if (f.createNewFile()) {
                 // file did not exist, file created
                 writeDataToFile(f, content);
+                return true;
             } else {
                 // file did exist, file did not create
-                return;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return false;
     }
 
     /**

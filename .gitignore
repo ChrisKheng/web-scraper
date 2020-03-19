@@ -7,7 +7,7 @@ build
 bin
 data
 .vscode
-result.txt
+res.txt
+res2.txt
 statistics.txt
 log.txt
-result2.txt
