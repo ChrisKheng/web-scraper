@@ -11,6 +11,7 @@ public class Cleaner extends Thread {
     private List<List<Data>> buffers;
     private List<List<Seed>> queues;
     private List<IndexBuilder> builders;
+    private TreeSet<String> set;
     private long count;
 
     public Cleaner(IndexURLTree tree, List<List<Data>> buffers, List<List<Seed>> queues, List<IndexBuilder> builders) {
@@ -19,6 +20,7 @@ public class Cleaner extends Thread {
         this.queues = queues;
         this.builders = builders;
         this.count = 0;
+        this.set = new TreeSet<>();
     }
 
     public void run() {
@@ -39,8 +41,7 @@ public class Cleaner extends Thread {
 
         writeRemainingToTree();        
         writeFromTreeToDisk();
-        writeFromQueuesToDisk();
-        writeSetToDisk();
+        writeFromQueueToDisk();
         writeStatsToDisk();
 
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -79,44 +80,22 @@ public class Cleaner extends Thread {
         } 
     }
 
-    // Temporary
-    private void writeFromQueuesToDisk() {
-        try {
-            File file = new File("./res2.txt");
-            file.createNewFile();
-            FileWriter writer = new FileWriter(file);            
-            writer.write("------------- Urls which are in the queues ------------\n");
-
-            int count = 0;
-            for (List<Seed> queue : queues) {
-                for (Seed seed : queue) {
-                    writer.write(String.format("Queue %d: %s\n", count, seed.getNewUrl()));                    
-                }
-                count++;
-            }
-            writer.close();
-
-       } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeSetToDisk() {
+    public void writeFromQueueToDisk() {
         try {
              // Duplicate checking
-            TreeSet<String> set = new TreeSet<>();
             queues.forEach(queue -> 
                 queue.forEach(seed -> {
-                    set.add(seed.getNewUrl());
+                    this.set.add(seed.getNewUrl());
                 }));
 
             File file = new File("./res3.txt");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
-            writer.write(String.format("Total size: %d\n", set.size()));
+            writer.write(String.format("Total size: %d\n", this.set.size()));
 
-            for (String url : set) {
+            for (String url : this.set) {
                 writer.write(url);
+                writer.write('\n');
             }
 
             writer.close();
@@ -138,6 +117,7 @@ public class Cleaner extends Thread {
             // TODO: add findURLs() method to calculate no. of URLs in IUT
             writer.write(String.format("%d new urls are found.\n", tree.size()));
             writer.write(String.format("%d urls are in queues.\n", numUrls));
+            writer.write(String.format("%d non-duplicated urls are in queues.\n", this.set.size()));
             writer.write(String.format("%d urls and pages were written from buffer to tree\n", count));
             writer.close();
         } catch (IOException e) {

@@ -19,7 +19,7 @@ import java.util.logging.SimpleFormatter;
 
 public class App {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 5;
+    public static final int BUFFER_SIZE = 1000;
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
