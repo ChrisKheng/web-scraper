@@ -11,8 +11,9 @@ import java.util.Arrays;
 
 public class IndexURLTree {
 
-    private String ROOT_DIRECTORY = "data";
-    private String HTML_FILENAME = "content.html";
+    // Maybe these 2 should in the constructor instead.
+    public String ROOT_DIRECTORY = "data";
+    public String HTML_FILENAME = "content.html";
 
     public IndexURLTree() {
 
@@ -23,6 +24,12 @@ public class IndexURLTree {
         return 0;
     }
 
+    /**
+     * This method adds a URL and its HTTP content into the Index URL Tree
+     *
+     * @param url     contains at least protocol and domain at minimum
+     * @param content the http content of the url
+     */
     public boolean addURLandContent(String url, String content) {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
@@ -49,6 +56,12 @@ public class IndexURLTree {
         return false;
     }
 
+    /**
+     * This method checks if the url is already stored in IUT
+     *
+     * @param url the url to check duplicates for
+     * @return true if url exist, otherwise false
+     */
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
         String path = getPathFromUrl(url);
@@ -134,13 +147,18 @@ public class IndexURLTree {
         return null;
     }
 
-    // This method takes in a url and breaks it down into 3 parts
-    // protocol, domain, and directory
-    // protocol is the http://
-    // domain is abc.com
-    // directory is /page1/2/3
-    // This method should be the method that controls the depth of our tree. Breakdown more = more depth
-    // breakdown less = less depth
+    /**
+     * This method takes in a url and breaks it down into 3 parts protocol, domain, and directory
+     * protocol is the http://
+     * domain is abc.com
+     * directory is /page1/2/3
+     * This method should be the method that controls the depth of our tree.
+     * Breakdown more = more depth breakdown less = less depth
+     *
+     * @param url the url to breakdown into path. Should contain at least protocol and domain
+     * @return an arraylist containing 3 string arrays containing protocol, domain and directory of
+     * the url
+     */
     private ArrayList<String[]> breakdownUrl(String url) {
 
         // Split url by the ://
@@ -168,6 +186,12 @@ public class IndexURLTree {
         return new ArrayList<>(Arrays.asList(protocol, domain, directory));
     }
 
+    /**
+     * This method breaks down a url into the directory path that it should exist in.
+     *
+     * @param url the url to breakdown into path. Should contain at least protocol and domain
+     * @return a String containing the path of the url
+     */
     private String getPathFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
         String[] protocol = breakdown.get(0);
@@ -225,64 +249,6 @@ public class IndexURLTree {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    // ========================== The following code is simply used for testing ===============================================================================
-//TODO: Refactor test code into test folder
-    public static void main(String[] args) {
-        IndexURLTree IUT = new IndexURLTree();
-        // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
-        // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
-        // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
-//        IUT.testBreakdownUrl("http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html");
-//        IUT.testBreakdownUrl("https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF");
-//        IUT.testBreakdownUrl("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
-        IUT.testAddURLandContent(
-            "http://www.academia.edu.au",
-            "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
-                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
-                + "<html>\n"
-                + "<head>\n"
-                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-                + "<title>$title</title>\n"
-                + "</head>\n"
-                + "<body>$body\n"
-                + "</body>\n"
-                + "</html>");
-//         IUT.testIsDuplicate("http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf");
-    }
-
-    public void testBreakdownUrl(String url) {
-        ArrayList<String[]> breakdown = breakdownUrl(url);
-        String[] protocol = breakdown.get(0);
-        String[] domain = breakdown.get(1);
-        String[] directory = breakdown.get(2);
-        System.out.println(url);
-        System.out.println(Arrays.toString(protocol));
-        System.out.println(Arrays.toString(domain));
-        System.out.println(Arrays.toString(directory));
-    }
-
-    public void testNavigateDirectory(String url) {
-        navigateDirectory(url, false);
-    }
-
-    public void testAddURLandContent(String url, String html) {
-        final long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 10000; i++) {
-            addURLandContent(url + i, html);
-        }
-        final long endTime = System.currentTimeMillis();
-        System.out.println((endTime - startTime) / 1000);
-    }
-
-    public void testIsDuplicate(String url) {
-        final long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 10000; i++) {
-            isDuplicate(url + "FILLER" + i);
-        }
-        final long endTime = System.currentTimeMillis();
-        System.out.println((endTime - startTime) / 1000);
     }
 
 }
