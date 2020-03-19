@@ -7,17 +7,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-public class App {
+public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 1000;
     private Logger logger;
@@ -25,6 +31,7 @@ public class App {
     private List<List<Data>> buffers;
     private List<List<Seed>> queues; // synchronised in the App constructor
     private List<IndexBuilder> builders;
+    private List<Thread> threads;
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -33,9 +40,10 @@ public class App {
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
         this.builders = new LinkedList<>();
+        this.threads = new LinkedList<>();
     }
 
-    public void run() {
+    public Void call() {
         logger.info("Starting........ =D");
         initialise();
 
@@ -69,6 +77,21 @@ public class App {
         builders.add(builder2);
         builders.add(builder3);
 
+        Thread stats = new StatsWriter(tree);
+
+        // Add all threads to a list
+        threads.add(crawler1);
+        threads.add(crawler2);
+        threads.add(crawler3);
+        threads.add(crawler4);
+        threads.add(crawler5);
+        threads.add(crawler6);
+        threads.add(builder1);
+        threads.add(builder2);
+        threads.add(builder3);
+        threads.add(stats);
+
+        // Start all threads
         crawler1.start();
         crawler2.start();
         crawler3.start();
@@ -83,10 +106,8 @@ public class App {
         builder2.start();
         builder3.start();
 
-        // what is this for?
-        Thread stats = new StatsWriter(tree);
         stats.start();
-        
+
         try {
             crawler1.join();
             logger.info(String.format("crawler %d joined...............................", crawler1.getId()));
@@ -106,8 +127,11 @@ public class App {
             crawler6.join();
             logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
         } catch (InterruptedException e) {
-            logger.severe(e.getMessage());
+            logger.info("App termininating..................");
+            threads.forEach(thread -> thread.interrupt());
         }
+
+        return null;
     }
     
     public void initialise() {
@@ -189,6 +213,15 @@ public class App {
     }
 
     public static void main(String[] args) {
-        new App().run();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        try {
+            executor.invokeAll(Arrays.asList(new App()), 30, TimeUnit.SECONDS); 
+            executor.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Exiting");
     }
 }

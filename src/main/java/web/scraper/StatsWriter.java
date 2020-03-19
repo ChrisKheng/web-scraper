@@ -40,6 +40,7 @@ public class StatsWriter extends Thread {
                     writer.write(String.format("%d new urls found", newSize - pastSize));
                 } catch(Exception e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         } catch (IOException e) {

@@ -64,7 +64,7 @@ public class Crawler extends CustomThread {
         // You can change the while loop condition if you want the crawler thread to
         // terminate
         // after a certain number of iterations using the counter variable.
-        while (!queue.isEmpty()) {
+        while (!queue.isEmpty() && !this.isInterrupted()) {
             counter++;
             logger.info(getFormattedMessage(String.format("curr iteration %d", counter)));
 
@@ -96,6 +96,10 @@ public class Crawler extends CustomThread {
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
                 MalformedURLException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                logger.info(getFormattedMessage("Exiting......................."));
+                break;
             } catch (Exception e) {
                 logger.warning(getFormattedMessage(String.format("exception: url %s", searchUrl)));
                 logger.warning(getFormattedMessage(String.format("exception: %s", e.getMessage())));
