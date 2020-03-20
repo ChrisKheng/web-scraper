@@ -4,27 +4,40 @@
 package web.scraper;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class App {
+public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 1000;
+    public static int runtime;
+    public static String inputFileName;
+    public static String outputFileName;
+    public static final int BUFFER_SIZE = 1000;    
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
     private List<List<Seed>> queues; // synchronised in the App constructor
     private List<IndexBuilder> builders;
+    private List<Thread> threads;
 
     public App() {
         this.logger = Logger.getLogger("App");
@@ -33,9 +46,10 @@ public class App {
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
         this.builders = new LinkedList<>();
+        this.threads = new LinkedList<>();
     }
 
-    public void run() {
+    public Void call() {
         logger.info("Starting........ =D");
         initialise();
 
@@ -69,6 +83,21 @@ public class App {
         builders.add(builder2);
         builders.add(builder3);
 
+        Thread stats = new StatsWriter(tree);
+
+        // Add all threads to a list
+        threads.add(crawler1);
+        threads.add(crawler2);
+        threads.add(crawler3);
+        threads.add(crawler4);
+        threads.add(crawler5);
+        threads.add(crawler6);
+        threads.add(builder1);
+        threads.add(builder2);
+        threads.add(builder3);
+        threads.add(stats);
+
+        // Start all threads
         crawler1.start();
         crawler2.start();
         crawler3.start();
@@ -83,10 +112,8 @@ public class App {
         builder2.start();
         builder3.start();
 
-        // what is this for?
-        Thread stats = new StatsWriter(tree);
         stats.start();
-        
+
         try {
             crawler1.join();
             logger.info(String.format("crawler %d joined...............................", crawler1.getId()));
@@ -106,8 +133,19 @@ public class App {
             crawler6.join();
             logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
         } catch (InterruptedException e) {
-            logger.severe(e.getMessage());
+            logger.info("App starting to terminate..................");
+            threads.forEach(thread -> thread.interrupt());
+            threads.forEach(thread -> {
+                try {
+                    thread.join();
+                } catch (InterruptedException er) {
+                    er.printStackTrace();
+                }
+            });
+            logger.info("App exiting...................");
         }
+
+        return null;
     }
     
     public void initialise() {
@@ -153,11 +191,19 @@ public class App {
 
     // Read urls from seed file.
     public List<Seed> getURLSeeds() {
-        InputStreamReader reader = new InputStreamReader(System.in);
-        BufferedReader bufReader = new BufferedReader(reader);
+        File inputFile = new File(App.inputFileName);
         List<Seed> seeds = new LinkedList<>();
 
-        bufReader.lines().forEach(url -> seeds.add(new Seed("", url)));
+        try {
+            BufferedReader bufReader = new BufferedReader(new FileReader(inputFile));
+            bufReader.lines().forEach(url -> seeds.add(new Seed("", url)));
+            bufReader.close();
+        } catch (FileNotFoundException e) {
+            logger.severe("Input file cannot be found!");
+            System.exit(1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return seeds;
     }
@@ -188,7 +234,49 @@ public class App {
         return result;
     }
 
-    public static void main(String[] args) {
-        new App().run();
+    // Parse input parameters
+    public static void setParameters(String[] args) {
+        try {
+            for (int i = 0; i < args.length; i += 2) {
+                String flag = args[i];
+                String argument = args[i+1];
+
+                if ("-time".equals(flag)) {
+                    String hours = argument;
+                    Matcher m = Pattern.compile("^\\d+").matcher(hours);
+                    if (m.find()) {
+                        App.runtime = Integer.parseInt(m.group());
+                    } else {
+                        throw new IllegalArgumentException("Hours given is not in correct format!");                      
+                    }                
+                } else if ("-input".equals(flag)) {
+                    App.inputFileName = argument;                    
+                } else if ("-output".equals(flag)) {
+                    App.outputFileName = argument;
+                } else {
+                    throw new IllegalArgumentException();                      
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid parameters!!");
+            System.out.println(e.getMessage());
+            e.printStackTrace();            
+            System.exit(1);
+        }
+    }
+
+    public static void main(String[] args) {        
+        setParameters(args);
+        
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        try {
+            executor.invokeAll(Arrays.asList(new App()), App.runtime, TimeUnit.HOURS); 
+            executor.shutdown();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Program exiting.............");
     }
 }

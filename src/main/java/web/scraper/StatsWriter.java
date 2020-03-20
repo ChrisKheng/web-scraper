@@ -31,7 +31,7 @@ public class StatsWriter extends Thread {
             FileWriter writer = new FileWriter(file);
             writer.write(".............Stats............\n");
             
-            while (true) {
+            while (true && !this.isInterrupted()) {
                 try{
                     // sleeps thread for 1 hour (currently 1 second for testing)
                     long pastSize = tree.size();
@@ -40,6 +40,7 @@ public class StatsWriter extends Thread {
                     writer.write(String.format("%d new urls found", newSize - pastSize));
                 } catch(Exception e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         } catch (IOException e) {

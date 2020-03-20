@@ -22,11 +22,9 @@ public class IndexBuilder extends CustomThread {
 
     @Override
     public void run() {
-        // TODO: add some sort of check to prevent busy waiting. Probably semaphore or something.
-        // Currently I just make the thread sleep.
         super.setThreadName(String.format("Builder %d", Thread.currentThread().getId()));        
 
-        while (true) {
+        while (!this.isInterrupted()) {
             try {
                 builderSempahore.acquire(App.BUFFER_SIZE);
                 logger.info(getFormattedMessage("Entering critical section............."));
@@ -40,7 +38,8 @@ public class IndexBuilder extends CustomThread {
                 crawlerSemaphore.release(App.BUFFER_SIZE);
                 logger.info(getFormattedMessage("Leaving critical section............."));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.info(getFormattedMessage("Interrupted.................."));
+                break;
             }
         }
     }
