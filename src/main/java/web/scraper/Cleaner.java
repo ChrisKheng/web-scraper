@@ -63,7 +63,7 @@ public class Cleaner extends Thread {
 
     public void writeFromTreeToDisk() {
         try {
-            File file = new File("./res.txt");
+            File file = new File(App.outputFileName);
             file.createNewFile();
 
             FileWriter writer = new FileWriter(file);

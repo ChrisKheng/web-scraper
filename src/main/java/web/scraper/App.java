@@ -4,8 +4,10 @@
 package web.scraper;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,9 +28,9 @@ import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    private static int runtime;
-    private static String inputFileName;
-    private static String outputFileName;
+    public static int runtime;
+    public static String inputFileName;
+    public static String outputFileName;
     public static final int BUFFER_SIZE = 1000;    
     private Logger logger;
     private IndexURLTree tree;
@@ -181,11 +183,19 @@ public class App implements Callable<Void> {
 
     // Read urls from seed file.
     public List<Seed> getURLSeeds() {
-        InputStreamReader reader = new InputStreamReader(System.in);
-        BufferedReader bufReader = new BufferedReader(reader);
+        File inputFile = new File(App.inputFileName);
         List<Seed> seeds = new LinkedList<>();
 
-        bufReader.lines().forEach(url -> seeds.add(new Seed("", url)));
+        try {
+            BufferedReader bufReader = new BufferedReader(new FileReader(inputFile));
+            bufReader.lines().forEach(url -> seeds.add(new Seed("", url)));
+            bufReader.close();
+        } catch (FileNotFoundException e) {
+            logger.severe("Input file cannot be found!");
+            System.exit(1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return seeds;
     }
@@ -232,7 +242,7 @@ public class App implements Callable<Void> {
                         throw new IllegalArgumentException("Hours given is not in correct format!");                      
                     }                
                 } else if ("-input".equals(flag)) {
-                    App.inputFileName = argument;
+                    App.inputFileName = argument;                    
                 } else if ("-output".equals(flag)) {
                     App.outputFileName = argument;
                 } else {
@@ -253,12 +263,12 @@ public class App implements Callable<Void> {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         try {
-            executor.invokeAll(Arrays.asList(new App()), 30, TimeUnit.SECONDS); 
+            executor.invokeAll(Arrays.asList(new App()), runtime, TimeUnit.HOURS); 
             executor.shutdown();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        System.out.println("Exiting");
+        System.out.println("App exiting.............");
     }
 }
