@@ -31,7 +31,7 @@ public class StatsWriter extends Thread {
             FileWriter writer = new FileWriter(file);
             writer.write(".............Stats............\n");
             
-            while (true) {
+            while (true && !this.isInterrupted()) {
                 try{
                     // sleeps thread for 1 hour (currently 1 second for testing)
                     long pastSize = tree.size();
