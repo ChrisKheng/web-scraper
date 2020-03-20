@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -22,10 +21,15 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 1000;
+    private static int runtime;
+    private static String inputFileName;
+    private static String outputFileName;
+    public static final int BUFFER_SIZE = 1000;    
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
@@ -212,7 +216,40 @@ public class App implements Callable<Void> {
         return result;
     }
 
-    public static void main(String[] args) {
+    // Parse input parameters
+    public static void setParameters(String[] args) {
+        try {
+            for (int i = 0; i < args.length; i += 2) {
+                String flag = args[i];
+                String argument = args[i+1];
+
+                if ("-time".equals(flag)) {
+                    String hours = argument;
+                    Matcher m = Pattern.compile("^\\d+").matcher(hours);
+                    if (m.find()) {
+                        App.runtime = Integer.parseInt(m.group());
+                    } else {
+                        throw new IllegalArgumentException("Hours given is not in correct format!");                      
+                    }                
+                } else if ("-input".equals(flag)) {
+                    App.inputFileName = argument;
+                } else if ("-output".equals(flag)) {
+                    App.outputFileName = argument;
+                } else {
+                    throw new IllegalArgumentException();                      
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid parameters!!");
+            System.out.println(e.getMessage());
+            e.printStackTrace();            
+            System.exit(1);
+        }
+    }
+
+    public static void main(String[] args) {        
+        setParameters(args);
+        
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         try {
