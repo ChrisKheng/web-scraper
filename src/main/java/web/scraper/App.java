@@ -133,8 +133,16 @@ public class App implements Callable<Void> {
             crawler6.join();
             logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
         } catch (InterruptedException e) {
-            logger.info("App termininating..................");
+            logger.info("App starting to terminate..................");
             threads.forEach(thread -> thread.interrupt());
+            threads.forEach(thread -> {
+                try {
+                    thread.join();
+                } catch (InterruptedException er) {
+                    er.printStackTrace();
+                }
+            });
+            logger.info("App exiting...................");
         }
 
         return null;
@@ -263,12 +271,12 @@ public class App implements Callable<Void> {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         try {
-            executor.invokeAll(Arrays.asList(new App()), runtime, TimeUnit.HOURS); 
+            executor.invokeAll(Arrays.asList(new App()), App.runtime, TimeUnit.HOURS); 
             executor.shutdown();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        System.out.println("App exiting.............");
+        System.out.println("Program exiting.............");
     }
 }
