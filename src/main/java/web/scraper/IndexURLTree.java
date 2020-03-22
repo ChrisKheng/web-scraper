@@ -15,13 +15,15 @@ public class IndexURLTree {
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
 
+    private long size = 0;
+
     public IndexURLTree() {
 
     }
 
     // A stub method
     public long size() {
-        return 0;
+        return size;
     }
 
     /**
@@ -45,6 +47,7 @@ public class IndexURLTree {
             if (f.createNewFile()) {
                 // file did not exist, file created
                 writeDataToFile(f, content);
+                size++;
                 return true;
             } else {
                 // file did exist, file did not create
