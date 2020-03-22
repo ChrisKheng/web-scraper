@@ -74,31 +74,6 @@ public class IndexURLTree {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        if (f.exists()) {
-//            // file already exists
-//            return false;
-//        }
-
-
-
-//        try {
-//            f.getParentFile().mkdirs();
-//            // get first char of directory, put directory into index file
-//            // check if html file (key, directory name) exists in index file
-//            // add the directory into the index file, create new file (make sure multiple BULs don't write same HTML)
-//            // value of index file - first 100 characters of the directory + '-' + count
-//            // synchronise the file - make sure 2 IBTs can't read same time - read write tgt atomic
-//            if (f.createNewFile()) {
-//                // file did not exist, file created
-//                writeDataToFile(f, content);
-//                size++;
-//                return true;
-//            } else {
-//                // file did exist, file did not create
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         return false;
     }
@@ -136,70 +111,6 @@ public class IndexURLTree {
         FileWriter fw = new FileWriter(f);
         fw.write(data);
         fw.close();
-    }
-
-    @Deprecated
-    // This method is not used currently
-    private String navigateDirectory(String url, boolean createMissingDirectory) {
-        //TODO: This method will read the url, and return name of the file containing the url's html content
-        // If createMissingDirectory is true, it will add the url into all the indexes it passes through,
-        // and return a filename that the html content should be saved as.
-
-        // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
-        // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
-        // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
-
-        // Shall use string split for now, but can switch to guava splitter if too slow
-        // Currently only need path. If need the webpage, extension etc, check the getPathFromURL method
-//        String path = ROOT_DIRECTORY + getPathFromUrl(url);
-//
-//        File f = new File(path);
-//        if (f.mkdirs()) {
-//            // File don't exist
-//            System.out.println("don't exist");
-//        } else {
-//            // File already exist
-//            System.out.println("exist");
-//        }
-
-        // THE FOLLOWING IS JUST PSEUDO CODE!!! NOT WORKING YET.
-//        String currentIndexFile = ""; // Add in first index file here
-//        for (int i = 0; i < header.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, header[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-//
-//        for (int i = 0; i < webpage.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, webpage[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-//
-//        for (int i = 0; i < extension.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, extension[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-        return null;
     }
 
     /**
