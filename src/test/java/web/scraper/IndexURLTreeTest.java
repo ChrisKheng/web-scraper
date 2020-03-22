@@ -38,8 +38,8 @@ public class IndexURLTreeTest {
     public void addURLandContent() {
         try {
             // TEST 1
-            String url = "https://www.jetbrains.com";
-            String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/" + IUT.HTML_FILENAME;
+            String url = "https://www.jetbrains.com/";
+            String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/.html";
             String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -50,14 +50,18 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+
+            Data d = new Data("", url, content);
+
+            IUT.addURLandContent(d);
+
             File f = getFile(path);
             String fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
 
             // TEST 2
             url = "https://www.jetbrains.com/test2";
-            path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/" + IUT.HTML_FILENAME;
+            path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/test2.html";
             content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -68,14 +72,17 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+
+            d = new Data("", url, content);
+
+            IUT.addURLandContent(d);
             f = getFile(path);
             fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
 
             // TEST 3
             url = "http://www.jetbrains.com.sg/test3/multiple/dir";
-            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/test3/multiple/dir/" + IUT.HTML_FILENAME;
+            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/normal/test3--multiple--dir.html";
             content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -86,10 +93,72 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+
+            d = new Data("", url, content);
+
+            IUT.addURLandContent(d);
             f = getFile(path);
             fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
+
+            // TEST 4
+            url = "http://www.jetbrains.com.sg/test3/multiple/dir/TESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIRTESTLONGDIR";
+            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/shorten/0.html";
+            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+
+            d = new Data("", url, content);
+
+            IUT.addURLandContent(d);
+            f = getFile(path);
+            fContent = new String(Files.readAllBytes(Paths.get(path)));
+            assertEquals(content, fContent);
+
+            // TEST 5
+            url = "http://www.jetbrains.com.sg/test3/multiple/dir/LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2";
+            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/shorten/1.html";
+            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+
+            d = new Data("", url, content);
+
+            IUT.addURLandContent(d);
+            f = getFile(path);
+            fContent = new String(Files.readAllBytes(Paths.get(path)));
+            assertEquals(content, fContent);
+
+            // TEST 6
+            url = "http://www.jetbrains.com.sg/test3/multiple/dir/LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2LONGDIRTEST2";
+            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+
+            d = new Data("", url, content);
+            assertEquals(IUT.addURLandContent(d), false);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -97,7 +166,9 @@ public class IndexURLTreeTest {
 
     @Test
     public void isDuplicate() {
-        String url = "https://www.jetbrains.com";
+        // TEST 1
+        String url = "https://www.jetbrains.com/";
+        String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/.html";
         String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
             + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
             + "<html>\n"
@@ -108,10 +179,15 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+
+        Data d = new Data("", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
 
-        url = "https://www.jetbrains.com/test1";
+
+        // TEST 2
+        url = "https://www.jetbrains.com/test2";
+        path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/test2.html";
         content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
             + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
             + "<html>\n"
@@ -122,10 +198,14 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+
+        d = new Data("", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
 
-        url = "https://www.jetbrains.com/test2/multiple/directory";
+        // TEST 3
+        url = "http://www.jetbrains.com.sg/test3/multiple/dir";
+        path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/normal/test3--multiple--dir.html";
         content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
             + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
             + "<html>\n"
@@ -136,7 +216,9 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+
+        d = new Data("", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
     }
 
