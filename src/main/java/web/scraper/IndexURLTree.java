@@ -56,18 +56,17 @@ public class IndexURLTree {
             File shorten = new File(f.getParent() + "/shorten");
             norm.mkdir();
             shorten.mkdir();
-
             //TODO: handle concurrency of reading and writing of index file
             if (searchForItem(f.getPath(), directory) == null) {
-                String value = "";
-                if (directory.length() > 200) {
+                String mod_directory = directory.replace("/","--");
+                String value = norm.getPath() + "/" + mod_directory + HTML_EXTENSION;
+                File newFile = new File(value);
+                if (mod_directory.length() > 200 || newFile.exists()) {
                     value = shorten.getPath() + "/" + Long.toString(counter++) + HTML_EXTENSION;
-                } else {
-                    value = norm.getPath() + "/" + directory + HTML_EXTENSION;
+                    newFile = new File(value);
                 }
                 addItemToIndex(f.getPath(), directory, value, source);
                 /** atomic operation should end here */
-                File newFile = new File(value);
                 writeDataToFile(newFile, document);
                 return true;
             }
@@ -262,15 +261,15 @@ public class IndexURLTree {
         for (int i = 0; i < domain.length; i++) {
             builder.append(domain[i] + "/");
         }
-        if (directory.length > 0) {
-            builder.append(directory[0] + ".txt");
+        if (directory[0].length() > 0) {
+            builder.append(directory[0].charAt(0) + ".txt");
         } else {
             builder.append("source.txt");
         }
 
         // TODO: possible duplicate URLs similar URLs but with -- and /
         // TODO: i.e. (abc.com/test/abc.html) & (abc.com/test--abc.html)
-        return new String[]{builder.toString(), String.join("--", directory)};
+        return new String[]{builder.toString(), String.join("/", directory)};
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
@@ -287,8 +286,9 @@ public class IndexURLTree {
             // Alternate Solution 1: Split lines by ',' and put key-value pair into HashSet and check for key
             // Alternate Solution 2: Add lines into list, sort and do binary search for key
             while ((line = br.readLine()) != null) {
-                if (line.contains(key)) { // key-value pair exists and found
-                    String[] tokens = line.split(",");
+                String[] tokens = line.split(",");
+                if (tokens[0].equals(key)) { // key-value pair exists and found
+                    br.close();
                     return tokens[1];
                 }
             }
@@ -307,6 +307,7 @@ public class IndexURLTree {
             FileWriter fw = new FileWriter(filename, true);
             BufferedWriter bw = new BufferedWriter(fw);
             bw.append(data);
+            bw.newLine();
             bw.close();
         } catch (IOException e) {
             e.printStackTrace();
