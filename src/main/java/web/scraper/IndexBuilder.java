@@ -45,7 +45,7 @@ public class IndexBuilder extends CustomThread {
     }
 
     public void writeIUT(Data data) {
-        if (tree.addURLandContent(data.getNewUrl(), data.getDocument())) {
+        if (tree.addURLandContent(data)) {
             this.count++;
         }
 
