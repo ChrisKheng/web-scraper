@@ -58,16 +58,14 @@ public class IndexURLTree {
             shorten.mkdir();
 
             //TODO: handle concurrency of reading and writing of index file
-            if (searchForItem(f.getName(), directory) == null) {
+            if (searchForItem(f.getPath(), directory) == null) {
                 String value = "";
-                boolean isShortened = false;
                 if (directory.length() > 200) {
-                    value = shorten.getName() + "/" + Long.toString(counter++) + HTML_EXTENSION;
-                    isShortened = true;
+                    value = shorten.getPath() + "/" + Long.toString(counter++) + HTML_EXTENSION;
                 } else {
-                    value = norm.getName() + "/" + directory + HTML_EXTENSION;
+                    value = norm.getPath() + "/" + directory + HTML_EXTENSION;
                 }
-                addItemToIndex(f.getName(), directory, value, source);
+                addItemToIndex(f.getPath(), directory, value, source);
                 /** atomic operation should end here */
                 File newFile = new File(value);
                 writeDataToFile(newFile, document);
@@ -119,8 +117,14 @@ public class IndexURLTree {
         String directory = result[1];
 
         File f = new File(path);
+        if (!f.exists()) {
+            return false;
+        }
 
-        boolean exist = f.exists();
+        boolean exist = true;
+        if (searchForItem(f.getPath(), directory) == null) {
+            exist = false;
+        }
 
         if (exist) {
             System.out.printf("Exist ............\n%s\n", path);
@@ -264,6 +268,8 @@ public class IndexURLTree {
             builder.append("source.txt");
         }
 
+        // TODO: possible duplicate URLs similar URLs but with -- and /
+        // TODO: i.e. (abc.com/test/abc.html) & (abc.com/test--abc.html)
         return new String[]{builder.toString(), String.join("--", directory)};
     }
 
