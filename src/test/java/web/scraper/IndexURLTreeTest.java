@@ -75,7 +75,7 @@ public class IndexURLTreeTest {
 
             // TEST 3
             url = "http://www.jetbrains.com.sg/test3/multiple/dir";
-            path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/" + IUT.HTML_FILENAME;
+            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/test3/multiple/dir/" + IUT.HTML_FILENAME;
             content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
