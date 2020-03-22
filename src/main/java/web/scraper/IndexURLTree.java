@@ -58,16 +58,16 @@ public class IndexURLTree {
             shorten.mkdir();
 
             //TODO: handle concurrency of reading and writing of index file
-            if (searchForItem(f.getName(), directory) == null) {
+            if (searchForItem(f.getPath(), directory) == null) {
                 String value = "";
                 boolean isShortened = false;
                 if (directory.length() > 200) {
-                    value = shorten.getName() + "/" + Long.toString(counter++) + HTML_EXTENSION;
+                    value = shorten.getPath() + "/" + Long.toString(counter++) + HTML_EXTENSION;
                     isShortened = true;
                 } else {
-                    value = norm.getName() + "/" + directory + HTML_EXTENSION;
+                    value = norm.getPath() + "/" + directory + HTML_EXTENSION;
                 }
-                addItemToIndex(f.getName(), directory, value, source);
+                addItemToIndex(f.getPath(), directory, value, source);
                 /** atomic operation should end here */
                 File newFile = new File(value);
                 writeDataToFile(newFile, document);
