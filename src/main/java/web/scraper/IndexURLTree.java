@@ -14,8 +14,10 @@ public class IndexURLTree {
     // Maybe these 2 should in the constructor instead.
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
+    public String HTML_EXTENSION = ".html";
 
     private long size = 0;
+    private long counter = 0;
 
     public IndexURLTree() {
 
@@ -27,34 +29,79 @@ public class IndexURLTree {
     }
 
     /**
-     * This method adds a URL and its HTTP content into the Index URL Tree
+     * This method adds a URL and its HTTP content into the Indexed URL Tree
      *
-     * @param url     contains at least protocol and domain at minimum
-     * @param content the http content of the url
+     * @param data    contains current URL, source URL and HTML content
      */
-    public boolean addURLandContent(String url, String content) {
+    public boolean addURLandContent(Data data) {
         //TODO: Add URL and Content passed to this method to the tree
-        String path = getPathFromUrl(url);
+        String url = data.getNewUrl();
+        String source = data.getSourceUrl();
+        String document = data.getDocument();
+
+        String[] result = getPathAndKeyFromUrl(url);
+        String path = result[0]; // indexed txt file
+        String directory = result[1]; // key of file
+        // TODO: handle (directory == "")
 
         File f = new File(path);
-        if (f.exists()) {
-            // file already exist
-            return false;
-        }
-
         try {
             f.getParentFile().mkdirs();
-            if (f.createNewFile()) {
-                // file did not exist, file created
-                writeDataToFile(f, content);
-                size++;
-                return true;
-            } else {
-                // file did exist, file did not create
+            if (!f.exists()) {
+                f.createNewFile();
             }
+
+            // Creation of Normal & Shortened URL Folders
+            File norm = new File(f.getParent() + "/normal");
+            File shorten = new File(f.getParent() + "/shorten");
+            norm.mkdir();
+            shorten.mkdir();
+
+            //TODO: handle concurrency of reading and writing of index file
+            if (searchForItem(f.getName(), directory) == null) {
+                String value = "";
+                boolean isShortened = false;
+                if (directory.length() > 200) {
+                    value = shorten.getName() + "/" + Long.toString(counter++) + HTML_EXTENSION;
+                    isShortened = true;
+                } else {
+                    value = norm.getName() + "/" + directory + HTML_EXTENSION;
+                }
+                addItemToIndex(f.getName(), directory, value, source);
+                /** atomic operation should end here */
+                File newFile = new File(value);
+                writeDataToFile(newFile, document);
+                return true;
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+//        if (f.exists()) {
+//            // file already exists
+//            return false;
+//        }
+
+
+
+//        try {
+//            f.getParentFile().mkdirs();
+//            // get first char of directory, put directory into index file
+//            // check if html file (key, directory name) exists in index file
+//            // add the directory into the index file, create new file (make sure multiple BULs don't write same HTML)
+//            // value of index file - first 100 characters of the directory + '-' + count
+//            // synchronise the file - make sure 2 IBTs can't read same time - read write tgt atomic
+//            if (f.createNewFile()) {
+//                // file did not exist, file created
+//                writeDataToFile(f, content);
+//                size++;
+//                return true;
+//            } else {
+//                // file did exist, file did not create
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
         return false;
     }
@@ -67,7 +114,9 @@ public class IndexURLTree {
      */
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
-        String path = getPathFromUrl(url);
+        String[] result = getPathAndKeyFromUrl(url);
+        String path = result[0];
+        String directory = result[1];
 
         File f = new File(path);
 
@@ -195,7 +244,7 @@ public class IndexURLTree {
      * @param url the url to breakdown into path. Should contain at least protocol and domain
      * @return a String containing the path of the url
      */
-    private String getPathFromUrl(String url) {
+    private String[] getPathAndKeyFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
         String[] protocol = breakdown.get(0);
         String[] domain = breakdown.get(1);
@@ -209,11 +258,13 @@ public class IndexURLTree {
         for (int i = 0; i < domain.length; i++) {
             builder.append(domain[i] + "/");
         }
-        for (int i = 0; i < directory.length; i++) {
-            builder.append(directory[i] + "/");
+        if (directory.length > 0) {
+            builder.append(directory[0] + ".txt");
+        } else {
+            builder.append("source.txt");
         }
-        builder.append(HTML_FILENAME);
-        return builder.toString();
+
+        return new String[]{builder.toString(), String.join("--", directory)};
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
@@ -235,20 +286,22 @@ public class IndexURLTree {
                     return tokens[1];
                 }
             }
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null; // key-value pair does not exist
     }
 
-    private void addItemToIndex(String filename, String key, String value) {
+    private void addItemToIndex(String filename, String key, String value, String source) {
         //TODO: This method adds a key and value pair into the file to be used in the future.
-        String pair = key + "," + value;
+        String data = key + "," + value + "," + source;
         try {
             //TODO: a way to sort the index file for faster search
             FileWriter fw = new FileWriter(filename, true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.append(pair);
+            bw.append(data);
+            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
