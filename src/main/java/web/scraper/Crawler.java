@@ -26,7 +26,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Crawler extends CustomThread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
-    private static final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
+    private final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
     private WebClient client;
     private Logger logger;
     private List<Seed> queue;
@@ -112,16 +112,20 @@ public class Crawler extends CustomThread {
 
     // Extract the root of the url and add it to the queue instead
     private void handle404Issue(String searchUrl) {
+        logger.entering(Crawler.class.getName(), "handle404Issue");
+
         Matcher m = rootPattern.matcher(searchUrl);
 
         // If the url does not match the rootPattern
         if (!m.find()) {
+            logger.info("Doesn't match url pattern");
             return;
         }
 
         String rootUrl = m.group(0);
         Seed newSeed = new Seed(searchUrl, rootUrl);
 
+        logger.info("Entering if else statement");
         // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
         if (this.queue.contains(newSeed)) {
             logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));            
@@ -129,6 +133,8 @@ public class Crawler extends CustomThread {
             this.queue.add(newSeed);
             logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
         }
+
+        logger.exiting(Crawler.class.getName(), "handle404Issue");
     }
 
     // Returns all the urls in the html page given.
