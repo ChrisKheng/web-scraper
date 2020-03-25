@@ -96,6 +96,7 @@ public class Crawler extends CustomThread {
                 if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
                     continue;
                 }
+                logger.info(getFormattedMessage("Going to handle 404........."));
                 handle404Issue(searchUrl);
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
                 MalformedURLException e) {
@@ -116,7 +117,7 @@ public class Crawler extends CustomThread {
 
     // Extract the root of the url and add it to the queue instead
     private void handle404Issue(String searchUrl) {
-        logger.entering(Crawler.class.getName(), "handle404Issue");
+        logger.info(getFormattedMessage("Now in handle404................"));
 
         Matcher m = rootPattern.matcher(searchUrl);
 
@@ -125,6 +126,8 @@ public class Crawler extends CustomThread {
             logger.info("Doesn't match url pattern");
             return;
         }
+
+        logger.info(getFormattedMessage("After matching................"));
 
         String rootUrl = m.group(0);
         Seed newSeed = new Seed(searchUrl, rootUrl);
@@ -138,7 +141,7 @@ public class Crawler extends CustomThread {
             logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
         }
 
-        logger.exiting(Crawler.class.getName(), "handle404Issue");
+        logger.info(getFormattedMessage("Getting out from handle404................"));
     }
 
     // Returns all the urls in the html page given.
