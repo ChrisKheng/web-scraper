@@ -92,6 +92,10 @@ public class Crawler extends CustomThread {
                 }
             } catch (FailingHttpStatusCodeException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
+
+                if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
+                    continue;
+                }
                 handle404Issue(searchUrl);
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
                 MalformedURLException e) {
