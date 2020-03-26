@@ -93,6 +93,8 @@ public class Crawler extends CustomThread {
             } catch (FailingHttpStatusCodeException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
 
+                logger.warning(getFormattedMessage(searchUrl));
+
                 if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
                     continue;
                 }
