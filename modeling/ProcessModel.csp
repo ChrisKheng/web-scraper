@@ -1,38 +1,27 @@
-﻿#define N 1; // Buffer size
-#define NB 3; // Number of buffers
-#define RUNTIME 24000; // Number of Hours
+﻿#define BUFFERSIZE 2;
 
-var bSTickets = 0;
+// crawlerSem & builderSem: synchronise the access of buffer between crawler and builder who share the same buffer
+// bufferMutex : synchronise the access of buffer between crawlers who share the same buffer
+var crawlerSem = BUFFERSIZE; 
+var builderSem = 0; 
+var bufferMutex = [1(3)];
 
-ReleaseBS() = {bSTickets++} -> ReleaseBS();
+Crawler(i) = [crawlerSem > 0]grabCrawlerSem{crawlerSem = crawlerSem - 1} -> AddToBuffer(i);
 
-VM() = startM -> mTerminate -> beginShutDown -> spawnCleaner -> shutDown -> Skip;
+AddToBuffer(i) = [bufferMutex[i] > 0]grabBufferMutex{bufferMutex[i] = bufferMutex[i] - 1} -> addToBuffer -> releaseBufferMutex{bufferMutex[i] = bufferMutex[i] + 1}
+	-> AfterAddToBuffer(i);
 
-Main() = startM -> parseInputs -> spawnApp -> setTimer -> interruptApp -> mTerminate -> Skip;
+AfterAddToBuffer(i) = releaseBuilderSem{builderSem = builderSem + 1} -> Crawler(i);
 
+// Simulate 2 crawlers sharing the same buffer
+Crawlers(i) = |||n:{0..1} @ Crawler(i);
 
+Builder() = [builderSem == BUFFERSIZE]grabBuilderSem{builderSem = 0} -> removeAllFromBuffer -> releaseCralwerSem{crawlerSem = BUFFERSIZE} -> Builder();
 
-//Timer() = setTimer -> countdown{
-//	var counter = RUNTIME;
-//	while (counter != 0) {
-//		counter--;
-//	}
-//} -> interruptApp -> Timer();
+// Simulate the interaction between 2 crawlers and 1 builder on 1 buffer
+CrawlersBuilder(i) = Crawlers(i) || Builder();
 
+// Simulate three concurrent occurences of CrawlersBuilder()
+CrawlersBuilder3() = |||i:{0..2} @ CrawlersBuilder(i);
 
-
-
-App() = spawnApp -> initialise -> processSeeds -> spawnCrawler -> spawnBuilder -> interruptApp -> Skip; // Add wait to be 
-
-
-Crawler() = spawnCrawler -> getUrlFromQueue -> extractsUrl -> checkUrlsInIUT -> addUrlToQueue -> grabCrawlerSemaphore -> addDataToBuffer
-	-> releaseBuilderSemaphore -> Skip;
-	
-Builder() = spawnBuilder -> writeDataIntoIUT -> releaseCrawlerSemaphore -> Skip;
-
-Cleaner() = spawnCleaner -> writeRemainingDataToIUT -> writeFromQueueToDisk -> reportStatistics -> Skip;
-
-
-Program() = VM() || Main() || App() || Crawler() || Builder() || Cleaner();
-
-#assert Program() deadlockfree;
+#assert CrawlersBuilder3() deadlockfree;
