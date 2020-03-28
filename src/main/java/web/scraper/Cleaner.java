@@ -72,6 +72,7 @@ public class Cleaner extends Thread {
             File file = new File("./res2.txt");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
+            writer.write("................. Remaining new URLs in queues that has not been crawled ............\n");
             writer.write(String.format("Total size: %d\n", this.set.size()));
 
             for (String url : this.set) {

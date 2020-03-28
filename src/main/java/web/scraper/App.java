@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 5;
+    public static final int BUFFER_SIZE = 1000;
     public static int runtime;
     public static String inputFileName;
     public static String outputFileName;

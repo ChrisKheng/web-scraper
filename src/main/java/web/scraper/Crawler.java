@@ -79,7 +79,7 @@ public class Crawler extends CustomThread {
                 logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
                 processUrls(searchUrl, urls);
 
-                // if (!sourceUrl.isEmpty()) {
+                if (!sourceUrl.isEmpty()) {
                     // Add to buffer (need to put inside the if statement)
                     crawlerSemaphore.acquire();
                     logger.info(getFormattedMessage(String.format("entering critical section.............")));
@@ -89,7 +89,7 @@ public class Crawler extends CustomThread {
 
                     builderSemaphore.release();
                     logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
-                // }
+                }
             } catch (FailingHttpStatusCodeException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
 
