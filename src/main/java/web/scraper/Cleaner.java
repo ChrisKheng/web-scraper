@@ -113,7 +113,7 @@ public class Cleaner extends Thread {
             long numUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
             this.count += builders.stream().mapToLong(builder -> builder.getCount()).sum();
 
-            writer.write(".............Stats............\n");
+            writer.write("\nFinal statistics:\n");
             // TODO: add findURLs() method to calculate no. of URLs in IUT
             writer.write(String.format("%d new urls are found.\n", tree.size()));
             writer.write(String.format("%d urls are in queues.\n", numUrls));
