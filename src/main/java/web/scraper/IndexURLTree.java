@@ -33,7 +33,9 @@ public class IndexURLTree {
      */
     public boolean addURLandContent(String url, String content) {
         //TODO: Add URL and Content passed to this method to the tree
-        String path = getPathFromUrl(url);
+        String[] result = getPathAndKeyFromUrl(url);
+        String path = result[0];
+        String directory = result[1];
 
         File f = new File(path);
         if (f.exists()) {
@@ -68,7 +70,9 @@ public class IndexURLTree {
      */
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
-        String path = getPathFromUrl(url);
+        String[] result = getPathAndKeyFromUrl(url);
+        String path = result[0];
+        String directory = result[1];
 
         File f = new File(path);
 
@@ -196,7 +200,7 @@ public class IndexURLTree {
      * @param url the url to breakdown into path. Should contain at least protocol and domain
      * @return a String containing the path of the url
      */
-    private String getPathFromUrl(String url) {
+    private String[] getPathAndKeyFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
         String[] protocol = breakdown.get(0);
         String[] domain = breakdown.get(1);
@@ -210,11 +214,15 @@ public class IndexURLTree {
         for (int i = 0; i < domain.length; i++) {
             builder.append(domain[i] + "/");
         }
-        for (int i = 0; i < directory.length; i++) {
-            builder.append(directory[i] + "/");
+        if (directory[0].length() > 0) {
+            builder.append(directory[0].charAt(0) + ".txt");
+        } else {
+            builder.append("source.txt");
         }
-        builder.append(HTML_FILENAME);
-        return builder.toString();
+
+        // TODO: possible duplicate URLs similar URLs but with -- and /
+        // TODO: i.e. (abc.com/test/abc.html) & (abc.com/test--abc.html)
+        return new String[]{builder.toString(), String.join("/", directory)};
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
