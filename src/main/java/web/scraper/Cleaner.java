@@ -51,7 +51,7 @@ public class Cleaner extends Thread {
         for (List<Data> buffer : buffers) {
             for (Data data : buffer) {
                 try {
-                    if (tree.addURLandContent(data.getNewUrl() , data.getDocument())) {
+                    if (tree.addURLandContent(data)) {
                         this.count++;
                     }
                 } catch (Exception e) {
