@@ -14,7 +14,6 @@ public class IndexURLTree {
     // Maybe these 2 should in the constructor instead.
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
-
     private long size = 0;
 
     public IndexURLTree() {
@@ -47,7 +46,9 @@ public class IndexURLTree {
             if (f.createNewFile()) {
                 // file did not exist, file created
                 writeDataToFile(f, content);
-                size++;
+                synchronized (this) {
+                    size++;
+                }
                 return true;
             } else {
                 // file did exist, file did not create
