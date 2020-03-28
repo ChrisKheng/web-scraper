@@ -219,13 +219,18 @@ public class IndexURLTree {
             // Or binary search after putting things in a list?
             // Alternate Solution 1: Split lines by ',' and put key-value pair into HashSet and check for key
             // Alternate Solution 2: Add lines into list, sort and do binary search for key
-            HashMap<String, String> indexMap = new HashMap<>();
+//            HashMap<String, String> indexMap = new HashMap<>();
             while ((line = br.readLine()) != null) {
-                String[] tokens = line.split(",",2);
-                indexMap.put(tokens[0], tokens[1]);
+//                String[] tokens = line.split(",",2);
+                String existingKey = line.substring(line.indexOf(","));
+                if (existingKey.contains(key)) {
+                    br.close();
+                    return line;
+                }
+//                indexMap.put(tokens[0], tokens[1]);
             }
             br.close();
-            return indexMap.get(key);
+//            return indexMap.get(key);
         } catch (IOException e) {
             e.printStackTrace();
         }
