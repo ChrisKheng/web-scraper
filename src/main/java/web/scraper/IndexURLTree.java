@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.swing.text.html.HTML;
 
 public class IndexURLTree {
 
@@ -29,7 +28,7 @@ public class IndexURLTree {
     /**
      * This method adds a URL and its HTTP content into the Index URL Tree
      *
-     * @param d     data
+     * @param d data
      */
     public boolean addURLandContent(Data d) {
         String url = d.getNewUrl();
@@ -79,7 +78,7 @@ public class IndexURLTree {
         if (exist) {
             System.out.printf("Exist ............\n%s\n", path);
         }
-        
+
         return exist;
     }
 
@@ -163,11 +162,9 @@ public class IndexURLTree {
 
     /**
      * This method takes in a url and breaks it down into 3 parts protocol, domain, and directory
-     * protocol is the http://
-     * domain is abc.com
-     * directory is /page1/2/3
-     * This method should be the method that controls the depth of our tree.
-     * Breakdown more = more depth breakdown less = less depth
+     * protocol is the http:// domain is abc.com directory is /page1/2/3 This method should be the
+     * method that controls the depth of our tree. Breakdown more = more depth breakdown less = less
+     * depth
      *
      * @param url the url to breakdown into path. Should contain at least protocol and domain
      * @return an arraylist containing 3 string arrays containing protocol, domain and directory of
@@ -215,22 +212,23 @@ public class IndexURLTree {
         StringBuilder builder = new StringBuilder();
         builder.append(ROOT_DIRECTORY + "/");
         for (int i = 0; i < protocol.length; i++) {
-            builder.append("pr-"+protocol[i] + "/");
+            builder.append("pr-" + protocol[i] + "/");
         }
         for (int i = 0; i < domain.length; i++) {
-            builder.append("do-"+domain[i] + "/");
+            builder.append("do-" + domain[i] + "/");
         }
         for (int i = 0; i < directory.length; i++) {
             if (directory[i].length() >= 250) {
-                String s = "dr-"+directory[i];
+                String s = "dr-" + directory[i];
                 while (s.length() > 250) {
-                    builder.append(s.substring(0, 250)+"/");
+                    builder.append(s.substring(0, 250) + "/");
                     s = "ex-" + s.substring(250);
                 }
-                if (s.length() != 0)
-                    builder.append(s+"/");
+                if (s.length() != 0) {
+                    builder.append(s + "/");
+                }
             } else {
-                builder.append("dr-"+directory[i] + "/");
+                builder.append("dr-" + directory[i] + "/");
             }
         }
         builder.append(HTML_FILENAME);
