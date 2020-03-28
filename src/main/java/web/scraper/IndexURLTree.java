@@ -6,9 +6,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class IndexURLTree {
 
@@ -16,6 +22,8 @@ public class IndexURLTree {
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
     public String HTML_EXTENSION = ".html";
+
+    private ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<String, ReadWriteLock>();
 
     private long size = 0;
     private long counter = 0;
@@ -57,6 +65,17 @@ public class IndexURLTree {
             File shorten = new File(f.getParent() + "/shorten");
             norm.mkdir();
             shorten.mkdir();
+
+            ReadWriteLock lock = lockMap.get(f.getPath());
+            if(lock == null) {
+                lock = new ReentrantReadWriteLock();
+                ReadWriteLock existingLock = lockMap.putIfAbsent(f.getPath(), lock);
+
+                if (existingLock != null) {
+                    lock = existingLock;
+                }
+            }
+            lock.writeLock().lock();
             //TODO: handle concurrency of reading and writing of index file
             if (searchForItem(f.getPath(), directory) == null) {
                 String mod_directory = directory.replace("/","--");
@@ -67,9 +86,12 @@ public class IndexURLTree {
                     newFile = new File(value);
                 }
                 addItemToIndex(f.getPath(), directory, value, source);
+                lock.writeLock().unlock();
                 /** atomic operation should end here */
                 writeDataToFile(newFile, document);
                 return true;
+            } else {
+                lock.writeLock().unlock();
             }
 
         } catch (IOException e) {
