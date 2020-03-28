@@ -100,8 +100,8 @@ public class Crawler extends CustomThread {
                 }
                 logger.info(getFormattedMessage("Going to handle 404........."));
                 handle404Issue(searchUrl);
-            } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
-                MalformedURLException e) {
+            } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException
+                    | MalformedURLException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -121,26 +121,28 @@ public class Crawler extends CustomThread {
     private void handle404Issue(String searchUrl) {
         logger.info(getFormattedMessage("Now in handle404................"));
 
-        Matcher m = rootPattern.matcher(searchUrl);
+        synchronized (Crawler.class) {
+            Matcher m = rootPattern.matcher(searchUrl);
 
-        // If the url does not match the rootPattern
-        if (!m.find()) {
-            logger.info("Doesn't match url pattern");
-            return;
-        }
+            // If the url does not match the rootPattern
+            if (!m.find()) {
+                logger.info("Doesn't match url pattern");
+                return;
+            }
 
-        logger.info(getFormattedMessage("After matching................"));
+            logger.info(getFormattedMessage("After matching................"));
 
-        String rootUrl = m.group(0);
-        Seed newSeed = new Seed(searchUrl, rootUrl);
+            String rootUrl = m.group(0);
+            Seed newSeed = new Seed(searchUrl, rootUrl);
 
-        logger.info("Entering if else statement");
-        // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
-        if (this.queue.contains(newSeed)) {
-            logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));            
-        } else {
-            this.queue.add(newSeed);
-            logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
+            logger.info("Entering if else statement");
+            // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
+            if (this.queue.contains(newSeed)) {
+                logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));
+            } else {
+                this.queue.add(newSeed);
+                logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
+            }
         }
 
         logger.info(getFormattedMessage("Getting out from handle404................"));
