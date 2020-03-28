@@ -1,0 +1,17 @@
+﻿//channel semCrawler 2;
+//channel semBuilder 2;
+
+#define BUFFERSIZE 3;
+
+var count1 = BUFFERSIZE;
+var count2 = 0;
+
+//Crawler() = semCrawler!1 -> crawl -> semBuilder!1 -> add{count2 = count2 + 1} -> Crawler();
+//
+//Builder() = semBuilder?[count2 == 2]x -> transfer -> add1{count1 = count1 + 1} -> so{if(count2 == 2) semCrawler?x} -> Builder();
+
+Crawler() = [count1 > 0]dec1{count1 = count1 - 1} -> crawl -> inc2{count2 = count2 + 1} -> Crawler();
+
+Builder() = [count2 == BUFFERSIZE]dec2{count2 = 0} -> transfer -> inc1{count1 = BUFFERSIZE} -> Builder();
+
+Demo() = Crawler() || Builder();

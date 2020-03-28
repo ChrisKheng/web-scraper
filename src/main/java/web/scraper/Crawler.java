@@ -26,7 +26,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Crawler extends CustomThread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
-    private static final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
+    private final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
     private WebClient client;
     private Logger logger;
     private List<Seed> queue;
@@ -92,6 +92,13 @@ public class Crawler extends CustomThread {
                 }
             } catch (FailingHttpStatusCodeException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
+
+                logger.warning(getFormattedMessage(searchUrl));
+
+                if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
+                    continue;
+                }
+                logger.info(getFormattedMessage("Going to handle 404........."));
                 handle404Issue(searchUrl);
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
                 MalformedURLException e) {
@@ -112,16 +119,22 @@ public class Crawler extends CustomThread {
 
     // Extract the root of the url and add it to the queue instead
     private void handle404Issue(String searchUrl) {
+        logger.info(getFormattedMessage("Now in handle404................"));
+
         Matcher m = rootPattern.matcher(searchUrl);
 
         // If the url does not match the rootPattern
         if (!m.find()) {
+            logger.info("Doesn't match url pattern");
             return;
         }
+
+        logger.info(getFormattedMessage("After matching................"));
 
         String rootUrl = m.group(0);
         Seed newSeed = new Seed(searchUrl, rootUrl);
 
+        logger.info("Entering if else statement");
         // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
         if (this.queue.contains(newSeed)) {
             logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));            
@@ -129,6 +142,8 @@ public class Crawler extends CustomThread {
             this.queue.add(newSeed);
             logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
         }
+
+        logger.info(getFormattedMessage("Getting out from handle404................"));
     }
 
     // Returns all the urls in the html page given.
