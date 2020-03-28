@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -14,6 +16,9 @@ public class IndexURLTree {
     // Maybe these 2 should in the constructor instead.
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
+    public String SOURCE_FILENAME = "source.txt";
+    public String RESULT_FILENAME = "res.txt";
+
     private long size = 0;
 
     public IndexURLTree() {
@@ -46,7 +51,7 @@ public class IndexURLTree {
             f.getParentFile().mkdirs();
             if (f.createNewFile()) {
                 // file did not exist, file created
-                writeDataToFile(f, content, source);
+                writeDataToFile(f, d);
                 synchronized (this) {
                     size++;
                 }
@@ -82,17 +87,43 @@ public class IndexURLTree {
         return exist;
     }
 
-    private void writeDataToFile(File f, String data, String source) throws IOException {
+    public void writeResult() {
+        try {
+
+            File file = new File(this.ROOT_DIRECTORY + "/" + RESULT_FILENAME);
+            file.createNewFile();
+            FileWriter fw = new FileWriter(file);
+            BufferedWriter writer = new BufferedWriter(fw);
+
+            Files.walk(Paths.get(this.ROOT_DIRECTORY))
+                .filter((f) -> f.endsWith(SOURCE_FILENAME))
+                .forEach((path) -> {
+                        try {
+                            String output = new String(Files.readAllBytes(path));
+                            writer.append(output+"\n");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                );
+
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeDataToFile(File f, Data d) throws IOException {
         // Create content.html
         FileWriter fw = new FileWriter(f);
-        fw.write(data);
+        fw.write(d.getDocument());
         fw.close();
 
         // Create source.txt
-        File sourceF = new File(f.getParentFile().getPath() + "/source.txt");
+        File sourceF = new File(f.getParentFile().getPath() + "/" + SOURCE_FILENAME);
         sourceF.createNewFile();
         fw = new FileWriter(sourceF);
-        fw.write(source);
+        fw.write(d.getNewUrl() + " --> " + d.getSourceUrl());
         fw.close();
     }
 
