@@ -103,7 +103,79 @@ public class IndexURLTreeTest {
             f = getFile(path);
             fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
+
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testWriteResult() {
+        try {
+            // TEST 1
+            String url = "https://www.jetbrains.com";
+            String path =
+                IUT.ROOT_DIRECTORY + "/pr-https/do-www/do-jetbrains/do-com/" + IUT.HTML_FILENAME;
+            String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+            Data d = new Data("http://www.source2.com", url, content);
+            IUT.addURLandContent(d);
+
+            // TEST 2
+            url = "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2";
+            path = IUT.ROOT_DIRECTORY
+                + "/pr-https/do-www/do-jetbrains/do-com/dr-test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2te/ex-st2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test/ex-2test2test2test2test2test2test2test2test2test2test2test2test2test2/"
+                + IUT.HTML_FILENAME;
+            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+            d = new Data("http://test.com", url, content);
+            IUT.addURLandContent(d);
+
+            // TEST 3
+            url = "http://www.jetbrains.com.sg/test3/multiple/dir";
+            path = IUT.ROOT_DIRECTORY
+                + "/pr-http/do-www/do-jetbrains/do-com/do-sg/dr-test3/dr-multiple/dr-dir/"
+                + IUT.HTML_FILENAME;
+            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+            d = new Data("http://test.commm", url, content);
+            IUT.addURLandContent(d);
+
+            IUT.writeResult();
+
+            path = IUT.ROOT_DIRECTORY + "/" + IUT.RESULT_FILENAME;
+            String fContent = new String(Files.readAllBytes(Paths.get(path)));
+            String expectedContent = "http://www.jetbrains.com.sg/test3/multiple/dir --> http://test.commm\n"
+                + "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2 --> http://test.com\n"
+                + "https://www.jetbrains.com --> http://www.source2.com\n";
+            assertEquals(fContent, expectedContent);
+
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
