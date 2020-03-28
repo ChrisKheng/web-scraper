@@ -2,9 +2,7 @@ package web.scraper;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,12 +19,14 @@ public class IndexURLTreeTest {
 
     private IndexURLTree IUT;
 
-    @Before public void createIUT() {
+    @Before
+    public void createIUT() {
         IUT = new IndexURLTree();
         IUT.ROOT_DIRECTORY = "test_data";
     }
 
-    @After public void cleanIUTDirectory() {
+    @After
+    public void cleanIUTDirectory() {
         try {
             Path path = Paths.get(IUT.ROOT_DIRECTORY);
             Files.walk(path)
@@ -44,7 +44,8 @@ public class IndexURLTreeTest {
         try {
             // TEST 1
             String url = "https://www.jetbrains.com";
-            String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/" + IUT.HTML_FILENAME;
+            String path =
+                IUT.ROOT_DIRECTORY + "/pr-https/do-www/do-jetbrains/do-com/" + IUT.HTML_FILENAME;
             String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -55,14 +56,17 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+            Data d = new Data("http://www.source2.com", url, content);
+            IUT.addURLandContent(d);
             File f = getFile(path);
             String fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
 
             // TEST 2
-            url = "https://www.jetbrains.com/test2";
-            path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/" + IUT.HTML_FILENAME;
+            url = "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2";
+            path = IUT.ROOT_DIRECTORY
+                + "/pr-https/do-www/do-jetbrains/do-com/dr-test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2te/ex-st2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test/ex-2test2test2test2test2test2test2test2test2test2test2test2test2test2/"
+                + IUT.HTML_FILENAME;
             content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -73,14 +77,17 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+            d = new Data("http://test.com", url, content);
+            IUT.addURLandContent(d);
             f = getFile(path);
             fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
 
             // TEST 3
             url = "http://www.jetbrains.com.sg/test3/multiple/dir";
-            path = IUT.ROOT_DIRECTORY + "/http/www/jetbrains/com/sg/test3/multiple/dir/" + IUT.HTML_FILENAME;
+            path = IUT.ROOT_DIRECTORY
+                + "/pr-http/do-www/do-jetbrains/do-com/do-sg/dr-test3/dr-multiple/dr-dir/"
+                + IUT.HTML_FILENAME;
             content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
                 + "<html>\n"
@@ -91,7 +98,8 @@ public class IndexURLTreeTest {
                 + "<body>$body\n"
                 + "</body>\n"
                 + "</html>";
-            IUT.addURLandContent(url, content);
+            d = new Data("http://test.commm", url, content);
+            IUT.addURLandContent(d);
             f = getFile(path);
             fContent = new String(Files.readAllBytes(Paths.get(path)));
             assertEquals(content, fContent);
@@ -113,7 +121,8 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+        Data d = new Data("http://test.commm/test123", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
 
         url = "https://www.jetbrains.com/test1";
@@ -127,7 +136,8 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+        d = new Data("www.reddit.com", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
 
         url = "https://www.jetbrains.com/test2/multiple/directory";
@@ -141,7 +151,8 @@ public class IndexURLTreeTest {
             + "<body>$body\n"
             + "</body>\n"
             + "</html>";
-        IUT.addURLandContent(url, content);
+        d = new Data("www.reddit.com", url, content);
+        IUT.addURLandContent(d);
         assert IUT.isDuplicate(url);
     }
 
@@ -164,15 +175,13 @@ public class IndexURLTreeTest {
             final long startTime = System.currentTimeMillis();
             System.out.println("Test started");
             for (int i = 0; i < 1000; i++) {
-                Data d = new Data("", url+i, content);
-                IUT.addURLandContent(url+i, content);
+                Data d = new Data("www.reddit.com", url + i, content);
+                IUT.addURLandContent(d);
             }
             final long endTime = System.currentTimeMillis();
-            System.out.println("Total execution time: " + ((endTime - startTime)/1000.0) + " seconds" );
+            System.out
+                .println("Total execution time: " + ((endTime - startTime) / 1000.0) + " seconds");
 
-//            File f = getFile(path);
-//            String fContent = new String(Files.readAllBytes(Paths.get(path)));
-//            assertEquals(content, fContent);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,7 +194,7 @@ public class IndexURLTreeTest {
         int numBuffers = 30;
         List<List<Data>> buffers = new LinkedList<>();
         List<IndexBuilderStub> indexBuilders = new LinkedList<>();
-        for(int i = 0; i < numBuffers; i++) {
+        for (int i = 0; i < numBuffers; i++) {
             LinkedList<Data> buffer = new LinkedList();
             buffers.add(buffer);
             indexBuilders.add(new IndexBuilderStub(IUT, buffer));
@@ -205,9 +214,9 @@ public class IndexURLTreeTest {
             + "</html>";
         int SIZE = 10000;
         for (int i = 0; i < SIZE; i++) {
-            Data d = new Data("", url+i, content);
+            Data d = new Data("http://www.source.com", url + i, content);
             //for(int j = 0; j < numBuffers; j++)
-            buffers.get(i%numBuffers).add(d);
+            buffers.get(i % numBuffers).add(d);
         }
 
         for (int i = 0; i < numBuffers; i++) {
@@ -218,7 +227,7 @@ public class IndexURLTreeTest {
             for (int i = 0; i < numBuffers; i++) {
                 indexBuilders.get(i).join();
             }
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         try {
@@ -241,7 +250,7 @@ public class IndexURLTreeTest {
         int numBuffers = 30;
         List<List<Data>> buffers = new LinkedList<>();
         List<IndexBuilderStub> indexBuilders = new LinkedList<>();
-        for(int i = 0; i < numBuffers; i++) {
+        for (int i = 0; i < numBuffers; i++) {
             LinkedList<Data> buffer = new LinkedList();
             buffers.add(buffer);
             indexBuilders.add(new IndexBuilderStub(IUT, buffer));
@@ -261,9 +270,10 @@ public class IndexURLTreeTest {
             + "</html>";
         int SIZE = 10000;
         for (int i = 0; i < SIZE; i++) {
-            Data d = new Data("", url+i, content);
-            for(int j = 0; j < numBuffers; j++)
+            Data d = new Data("http://www.source1.com", url + i, content);
+            for (int j = 0; j < numBuffers; j++) {
                 buffers.get(j).add(d);
+            }
         }
 
         for (int i = 0; i < numBuffers; i++) {
@@ -274,12 +284,13 @@ public class IndexURLTreeTest {
             for (int i = 0; i < numBuffers; i++) {
                 indexBuilders.get(i).join();
             }
-        } catch(InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         try {
             for (int i = 0; i < SIZE; i++) {
-                path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample"+i+"/"+IUT.HTML_FILENAME;
+                path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample" + i + "/"
+                    + IUT.HTML_FILENAME;
                 String fContent = new String(Files.readAllBytes(Paths.get(path)));
                 //System.out.println(i);
                 assertEquals(content, fContent);
@@ -290,6 +301,7 @@ public class IndexURLTreeTest {
     }
 
     public class IndexBuilderStub extends CustomThread {
+
         private IndexURLTree tree;
         private List<Data> buffer;
         private Logger logger = Logger.getLogger("IndexBuilder");
@@ -311,7 +323,7 @@ public class IndexURLTreeTest {
         }
 
         public void writeIUT(Data data) {
-            if (tree.addURLandContent(data.getNewUrl(),data.getDocument())) {
+            if (tree.addURLandContent(data)) {
                 this.count++;
             }
 
