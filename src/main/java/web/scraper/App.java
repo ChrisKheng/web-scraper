@@ -83,7 +83,7 @@ public class App implements Callable<Void> {
         builders.add(builder2);
         builders.add(builder3);
 
-        Thread stats = new StatsWriter(tree);
+        Thread stats = new StatsWriter(tree, queues, this.buffers);
 
         // Add all threads to a list
         threads.add(crawler1);
