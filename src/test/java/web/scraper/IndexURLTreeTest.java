@@ -205,6 +205,41 @@ public class IndexURLTreeTest {
     }
 
     @Test
+    public void addUrlAndContentTimeTest() {
+        try {
+
+            String url = "https://www.jetbrains.com/test2/sample";
+            String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/test2--sample.html";
+            String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+            final long startTime = System.currentTimeMillis();
+            System.out.println("Test started");
+            for (int i = 0; i < 1000; i++) {
+                Data d = new Data("", url+i, content);
+                IUT.addURLandContent(d);
+            }
+            final long endTime = System.currentTimeMillis();
+            System.out.println("Total execution time: " + ((endTime - startTime)/1000.0) + " seconds" );
+
+//            File f = getFile(path);
+//            String fContent = new String(Files.readAllBytes(Paths.get(path)));
+//            assertEquals(content, fContent);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
     public void isDuplicate() {
         // TEST 1
         String url = "https://www.jetbrains.com/";
