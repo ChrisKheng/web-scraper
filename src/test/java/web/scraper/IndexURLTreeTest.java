@@ -2,12 +2,17 @@ package web.scraper;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,6 +143,185 @@ public class IndexURLTreeTest {
             + "</html>";
         IUT.addURLandContent(url, content);
         assert IUT.isDuplicate(url);
+    }
+
+    @Test
+    public void addUrlAndContentTimeTest() {
+        try {
+
+            String url = "https://www.jetbrains.com/test2/sample";
+            String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/normal/test2--sample.html";
+            String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+                + "<html>\n"
+                + "<head>\n"
+                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+                + "<title>$title</title>\n"
+                + "</head>\n"
+                + "<body>$body\n"
+                + "</body>\n"
+                + "</html>";
+            final long startTime = System.currentTimeMillis();
+            System.out.println("Test started");
+            for (int i = 0; i < 1000; i++) {
+                Data d = new Data("", url+i, content);
+                IUT.addURLandContent(url+i, content);
+            }
+            final long endTime = System.currentTimeMillis();
+            System.out.println("Total execution time: " + ((endTime - startTime)/1000.0) + " seconds" );
+
+//            File f = getFile(path);
+//            String fContent = new String(Files.readAllBytes(Paths.get(path)));
+//            assertEquals(content, fContent);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void testConcurrency() {
+        int numBuffers = 30;
+        List<List<Data>> buffers = new LinkedList<>();
+        List<IndexBuilderStub> indexBuilders = new LinkedList<>();
+        for(int i = 0; i < numBuffers; i++) {
+            LinkedList<Data> buffer = new LinkedList();
+            buffers.add(buffer);
+            indexBuilders.add(new IndexBuilderStub(IUT, buffer));
+        }
+
+        String url = "https://www.jetbrains.com/test2/sample";
+        String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample";
+        String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+            + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+            + "<html>\n"
+            + "<head>\n"
+            + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+            + "<title>$title</title>\n"
+            + "</head>\n"
+            + "<body>$body\n"
+            + "</body>\n"
+            + "</html>";
+        int SIZE = 10000;
+        for (int i = 0; i < SIZE; i++) {
+            Data d = new Data("", url+i, content);
+            //for(int j = 0; j < numBuffers; j++)
+            buffers.get(i%numBuffers).add(d);
+        }
+
+        for (int i = 0; i < numBuffers; i++) {
+            indexBuilders.get(i).start();
+
+        }
+        try {
+            for (int i = 0; i < numBuffers; i++) {
+                indexBuilders.get(i).join();
+            }
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            System.out.println(IUT.size());
+            assertEquals(IUT.size(), SIZE);
+//            for (int i = 0; i < SIZE; i++) {
+//                path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample"+i+"/"+IUT.HTML_FILENAME;
+//                String fContent = new String(Files.readAllBytes(Paths.get(path)));
+//                //System.out.println(i);
+//                assertEquals(content, fContent);
+//            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test
+    public void testConcurrency2() {
+        int numBuffers = 30;
+        List<List<Data>> buffers = new LinkedList<>();
+        List<IndexBuilderStub> indexBuilders = new LinkedList<>();
+        for(int i = 0; i < numBuffers; i++) {
+            LinkedList<Data> buffer = new LinkedList();
+            buffers.add(buffer);
+            indexBuilders.add(new IndexBuilderStub(IUT, buffer));
+        }
+
+        String url = "https://www.jetbrains.com/test2/sample";
+        String path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample";
+        String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+            + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+            + "<html>\n"
+            + "<head>\n"
+            + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+            + "<title>$title</title>\n"
+            + "</head>\n"
+            + "<body>$body\n"
+            + "</body>\n"
+            + "</html>";
+        int SIZE = 10000;
+        for (int i = 0; i < SIZE; i++) {
+            Data d = new Data("", url+i, content);
+            for(int j = 0; j < numBuffers; j++)
+                buffers.get(j).add(d);
+        }
+
+        for (int i = 0; i < numBuffers; i++) {
+            indexBuilders.get(i).start();
+
+        }
+        try {
+            for (int i = 0; i < numBuffers; i++) {
+                indexBuilders.get(i).join();
+            }
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            for (int i = 0; i < SIZE; i++) {
+                path = IUT.ROOT_DIRECTORY + "/https/www/jetbrains/com/test2/sample"+i+"/"+IUT.HTML_FILENAME;
+                String fContent = new String(Files.readAllBytes(Paths.get(path)));
+                //System.out.println(i);
+                assertEquals(content, fContent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public class IndexBuilderStub extends CustomThread {
+        private IndexURLTree tree;
+        private List<Data> buffer;
+        private Logger logger = Logger.getLogger("IndexBuilder");
+        private long count; // For keep tracking the number of urls added to the tree (temporal implementation)
+
+        public IndexBuilderStub(IndexURLTree tree, List<Data> buffer) {
+            this.tree = tree;
+            this.buffer = buffer;
+            this.count = 0;
+        }
+
+        @Override
+        public void run() {
+            super.setThreadName(String.format("Builder %d", Thread.currentThread().getId()));
+            while (!buffer.isEmpty()) {
+                Data data = buffer.remove(0);
+                writeIUT(data);
+            }
+        }
+
+        public void writeIUT(Data data) {
+            if (tree.addURLandContent(data.getNewUrl(),data.getDocument())) {
+                this.count++;
+            }
+
+//            logger.info(getFormattedMessage("write...................."));
+//            logger.info(data.getNewUrl());
+        }
+
+        public long getCount() {
+            return count;
+        }
     }
 
     private File getFile(String path) {
