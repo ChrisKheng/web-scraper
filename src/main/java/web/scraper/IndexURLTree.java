@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.text.html.HTML;
 
 public class IndexURLTree {
 
@@ -28,15 +29,14 @@ public class IndexURLTree {
     /**
      * This method adds a URL and its HTTP content into the Index URL Tree
      *
-     * @param url     contains at least protocol and domain at minimum
-     * @param content the http content of the url
+     * @param d     data
      */
-    public boolean addURLandContent(String url, String content) {
+    public boolean addURLandContent(Data d) {
+        String url = d.getNewUrl();
+        String content = d.getDocument();
+        String source = d.getSourceUrl();
         //TODO: Add URL and Content passed to this method to the tree
-        String[] result = getPathAndKeyFromUrl(url);
-        String path = result[0];
-        String directory = result[1];
-
+        String path = getPathFromUrl(url);
         File f = new File(path);
         if (f.exists()) {
             // file already exist
@@ -47,7 +47,7 @@ public class IndexURLTree {
             f.getParentFile().mkdirs();
             if (f.createNewFile()) {
                 // file did not exist, file created
-                writeDataToFile(f, content);
+                writeDataToFile(f, content, source);
                 synchronized (this) {
                     size++;
                 }
@@ -70,9 +70,7 @@ public class IndexURLTree {
      */
     public boolean isDuplicate(String url) {
         //TODO: Check if URL is already stored
-        String[] result = getPathAndKeyFromUrl(url);
-        String path = result[0];
-        String directory = result[1];
+        String path = getPathFromUrl(url);
 
         File f = new File(path);
 
@@ -85,9 +83,17 @@ public class IndexURLTree {
         return exist;
     }
 
-    private void writeDataToFile(File f, String data) throws IOException {
+    private void writeDataToFile(File f, String data, String source) throws IOException {
+        // Create content.html
         FileWriter fw = new FileWriter(f);
         fw.write(data);
+        fw.close();
+
+        // Create source.txt
+        File sourceF = new File(f.getParentFile().getPath() + "/source.txt");
+        sourceF.createNewFile();
+        fw = new FileWriter(sourceF);
+        fw.write(source);
         fw.close();
     }
 
@@ -200,7 +206,7 @@ public class IndexURLTree {
      * @param url the url to breakdown into path. Should contain at least protocol and domain
      * @return a String containing the path of the url
      */
-    private String[] getPathAndKeyFromUrl(String url) {
+    private String getPathFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
         String[] protocol = breakdown.get(0);
         String[] domain = breakdown.get(1);
@@ -209,20 +215,29 @@ public class IndexURLTree {
         StringBuilder builder = new StringBuilder();
         builder.append(ROOT_DIRECTORY + "/");
         for (int i = 0; i < protocol.length; i++) {
-            builder.append(protocol[i] + "/");
+            builder.append("pr-"+protocol[i] + "/");
         }
         for (int i = 0; i < domain.length; i++) {
-            builder.append(domain[i] + "/");
+            builder.append("do-"+domain[i] + "/");
         }
-        if (directory[0].length() > 0) {
-            builder.append(directory[0].charAt(0) + ".txt");
-        } else {
-            builder.append("source.txt");
+        for (int i = 0; i < directory.length; i++) {
+            if (directory[i].length() >= 250) {
+                String s = "dr-"+directory[i];
+                while (s.length() > 250) {
+                    builder.append(s.substring(0, 250)+"/");
+                    s = "ex-" + s.substring(250);
+                }
+                if (s.length() != 0)
+                    builder.append(s+"/");
+            } else {
+                builder.append("dr-"+directory[i] + "/");
+            }
         }
+        builder.append(HTML_FILENAME);
 
         // TODO: possible duplicate URLs similar URLs but with -- and /
         // TODO: i.e. (abc.com/test/abc.html) & (abc.com/test--abc.html)
-        return new String[]{builder.toString(), String.join("/", directory)};
+        return builder.toString();
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
