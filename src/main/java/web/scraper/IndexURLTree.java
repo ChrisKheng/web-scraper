@@ -17,12 +17,12 @@ public class IndexURLTree {
     public String ROOT_DIRECTORY = "data";
     public String HTML_FILENAME = "content.html";
     public String SOURCE_FILENAME = "source.txt";
-    public String RESULT_FILENAME = "res.txt";
+    public String RESULT_FILENAME;
 
     private long size = 0;
 
-    public IndexURLTree() {
-
+    public IndexURLTree(String outputFileName) {
+        this.RESULT_FILENAME = outputFileName;
     }
 
     // A stub method
@@ -90,7 +90,7 @@ public class IndexURLTree {
     public void writeResult() {
         try {
 
-            File file = new File(this.ROOT_DIRECTORY + "/" + RESULT_FILENAME);
+            File file = new File("./" + RESULT_FILENAME);
             file.createNewFile();
             FileWriter fw = new FileWriter(file);
             BufferedWriter writer = new BufferedWriter(fw);

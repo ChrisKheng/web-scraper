@@ -40,7 +40,7 @@ public class Cleaner extends Thread {
         }
 
         writeRemainingToTree();        
-        writeFromTreeToDisk();
+        tree.writeResult();
         writeFromQueueToDisk();
         writeStatsToDisk();
 
@@ -59,25 +59,6 @@ public class Cleaner extends Thread {
                 }
             }
         }
-    }
-
-    public void writeFromTreeToDisk() {
-        try {
-            File file = new File(App.outputFileName);
-            file.createNewFile();
-
-            FileWriter writer = new FileWriter(file);
-
-            // TODO: traverse entire directory tree to write URLs (and HTML?) into file
-            // for (String url : tree) {
-            //     writer.write(url);
-            //     writer.write("\n");
-            // }
-
-           writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } 
     }
 
     public void writeFromQueueToDisk() {

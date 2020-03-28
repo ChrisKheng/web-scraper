@@ -28,10 +28,10 @@ import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
+    public static final int BUFFER_SIZE = 5;
     public static int runtime;
     public static String inputFileName;
     public static String outputFileName;
-    public static final int BUFFER_SIZE = 1000;    
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
@@ -41,7 +41,7 @@ public class App implements Callable<Void> {
 
     public App() {
         this.logger = Logger.getLogger("App");
-        this.tree = new IndexURLTree();
+        this.tree = new IndexURLTree(outputFileName);
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
