@@ -95,9 +95,9 @@ public class Crawler extends CustomThread {
 
                 logger.warning(getFormattedMessage(searchUrl));
 
-                if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
-                    continue;
-                }
+                // if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
+                //     continue;
+                // }
                 logger.info(getFormattedMessage("Going to handle 404........."));
                 handle404Issue(searchUrl);
             } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException
@@ -133,6 +133,13 @@ public class Crawler extends CustomThread {
             logger.info(getFormattedMessage("After matching................"));
 
             String rootUrl = m.group(0);
+
+            // To prevent using an invalid 404 url again
+            if (rootUrl.equals(searchUrl)) {
+                logger.info(getFormattedMessage("Skipping as rootUrl is the same as original"));
+                return;
+            }
+
             Seed newSeed = new Seed(searchUrl, rootUrl);
 
             logger.info("Entering if else statement");
