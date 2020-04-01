@@ -4,20 +4,23 @@
 
 var flag = TRUE;
 var duplicate = [FALSE, FALSE, FALSE];
+var tree = [-1];
+var result = [-1, 5];
 
-isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,url)} -> Skip;
+isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> Skip;
 
-setUp(i) = reset{call(resetTree)} -> getUrlFromBuffer(i);
-getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
-checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,url)} -> addUrl(i, url);
-addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{call(addToTree,url)} -> Skip;
+//getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
+//checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> addUrl(i, url);
+//addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
+getUrlFromBuffer(i) = getUrl -> addUrl(i, 5); // Currently just use placeholder for url
+addUrl(i,url) =  [call(isDuplicate,tree,url)==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
 
-
-#define goal (duplicate[0] == flag);
-#define goal2 (flag==call(checkForDuplicates));
-System = setUp(0) ||| setUp(1);
+#define goal (result == tree);
+#define goal2 (flag==call(checkForDuplicates,tree));
+System = getUrlFromBuffer(0) ||| getUrlFromBuffer(1);
 #assert System reaches goal;
 #assert System reaches goal2;
+
 
 //1) IUT C# data structure (maybe an array, can refer to the prof email)
 //2) IUT check for duplicate

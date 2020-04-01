@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.IO;
 
 //the namespace must be PAT.Lib, the class and method names can be arbitrary
 namespace PAT.Lib
@@ -22,22 +23,22 @@ namespace PAT.Lib
     /// </summary>
     
     public class IndexURLTreeHelper {
-    	private static List<int> tree = new List<int>();
     	
-    	public static void resetTree() {
-    		tree = new List<int>();
+    	public static int isDuplicate(int[] tree, int url) {
+			foreach(int i in tree) {
+				if(i == url)
+					return 1;
+			}
+			return 0;
     	}
     	
-    	public static int isDuplicate(int url) {
-    		return tree.Contains(url) ? 1 : 0;
+    	public static int[] addToTree(int[] tree, int url) {
+    		return tree.Concat(new int[] { url }).ToArray();
     	}
     	
-    	public static void addToTree(int url) {
-    		tree.Add(url);
-    	}
-    	
-    	public static int checkForDuplicates() {
-    		var anyDuplicate = tree.GroupBy(x => x).Any(g => g.Count() > 1);
+    	public static int checkForDuplicates(int[] tree) {
+    		
+    		var anyDuplicate = tree.OfType<int>().ToList().GroupBy(x => x).Any(g => g.Count() > 1);
     		return anyDuplicate ? 1 : 0;
     		
     	}
