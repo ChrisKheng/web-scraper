@@ -1,0 +1,30 @@
+﻿#import "IUT";
+#define FALSE 0;
+#define TRUE 1;
+
+var flag = TRUE;
+var duplicate = [FALSE, FALSE, FALSE];
+
+isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,url)} -> Skip;
+
+setUp(i) = reset{call(resetTree)} -> getUrlFromBuffer(i);
+getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
+checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,url)} -> addUrl(i, url);
+addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{call(addToTree,url)} -> Skip;
+
+
+#define goal (duplicate[0] == flag);
+#define goal2 (flag==call(checkForDuplicates));
+System = setUp(0) ||| setUp(1);
+#assert System reaches goal;
+#assert System reaches goal2;
+
+//1) IUT C# data structure (maybe an array, can refer to the prof email)
+//2) IUT check for duplicate
+//3) IBT transfer urls from buffer to tree
+
+
+
+
+
+ 
