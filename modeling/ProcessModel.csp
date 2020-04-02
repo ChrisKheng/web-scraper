@@ -1,33 +1,51 @@
-﻿#import "PAT.Lib.List";
+﻿#import "PAT.Lib.Lists";
 
 #define BUFFER_SIZE 2;
 #define NUM_BUFFERS 3;
 #define NUM_CRAWLERS 6;
 
+// Model the pool of urls in the internet
+// TODO: add comment on what does the number means
 var urls = [18, 19, 20, 18, 21, 22, 21, 23, 24, 24, 25, 26, 27, 28, 28, 29, 26, 30, 32, 31, 33, 35, 35, 34, 36, 37, 37, 38, 38, 40, 
 	39, 41, 42, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+// queues: queue of each crawler
+var<Lists> queues = new Lists(NUM_CRAWLERS);
+var<Lists> buffers = new Lists(NUM_BUFFERS);
+
+// Initialise each queue with some seed urls
+// a, b, c ... are just placeholder because of syntax
+var a = queues.Append(0, [0, 1, 2]);
+var b = queues.Append(1, [3, 4, 5]);
+var c = queues.Append(2, [6, 7, 8]);
+var d = queues.Append(3, [9, 10, 11]);
+var e = queues.Append(4, [12, 13, 14]);
+var f = queues.Append(5, [15, 16, 17]);
 
 
 // crawlerSem & builderSem: synchronise the access of buffer between crawler and builder who share the same buffer
 // bufferMutex : synchronise the access of buffer between crawlers who share the same buffer
-var crawlerSem = BUFFER_SIZE; 
-var builderSem = 0; 
-var bufferMutex = [1(3)];
+var crawlerSem = [BUFFER_SIZE(NUM_BUFFERS)]; 
+var builderSem = [0(NUM_BUFFERS)]; 
+var bufferMutex = [1(NUM_BUFFERS)];
 
-Crawler(i) = [crawlerSem > 0]grabCrawlerSem{crawlerSem = crawlerSem - 1} -> AddToBuffer(i);
 
-AddToBuffer(i) = [bufferMutex[i] > 0]grabBufferMutex{bufferMutex[i] = bufferMutex[i] - 1} -> addToBuffer -> releaseBufferMutex{bufferMutex[i] = bufferMutex[i] + 1}
+// i/2 because we want to map crawler 0, 1 to crawlerSem 0 and so on (i.e. 0, 1 -> 0; 2, 3 -> 1; 4, 5 -> 2)
+// Same goes to bufferMutex
+Crawler(i) = [crawlerSem[i/2] > 0]grabCrawlerSem{crawlerSem[i/2] = crawlerSem[i/2] - 1} -> AddToBuffer(i);
+
+AddToBuffer(i) = [bufferMutex[i/2] > 0]grabBufferMutex{bufferMutex[i/2] = bufferMutex[i/2] - 1} -> addToBuffer -> releaseBufferMutex{bufferMutex[i/2] = bufferMutex[i/2] + 1}
 	-> AfterAddToBuffer(i);
 
-AfterAddToBuffer(i) = releaseBuilderSem{builderSem = builderSem + 1} -> Crawler(i);
+AfterAddToBuffer(i) = releaseBuilderSem{builderSem[i/2] = builderSem[i/2] + 1} -> Crawler(i);
 
 // Simulate 2 crawlers sharing the same buffer
-Crawlers(i) = |||n:{0..1} @ Crawler(i);
+Crawlers(i) = |||n:{0..1} @ Crawler(n + i*2);
 
-Builder() = [builderSem == BUFFER_SIZE]grabBuilderSem{builderSem = 0} -> removeAllFromBuffer -> releaseCralwerSem{crawlerSem = BUFFER_SIZE} -> Builder();
+Builder(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem{builderSem[i] = 0} -> removeAllFromBuffer -> releaseCralwerSem{crawlerSem[i] = BUFFER_SIZE} -> Builder(i);
 
 // Simulate the interaction between 2 crawlers and 1 builder on 1 buffer
-CrawlersBuilder(i) = Crawlers(i) || Builder();
+CrawlersBuilder(i) = Crawlers(i) || Builder(i);
 
 // Simulate three concurrent occurences of CrawlersBuilder()
 CrawlersBuilder3() = |||i:{0..2} @ CrawlersBuilder(i);
