@@ -1,25 +1,46 @@
-﻿#import "IUT";
+﻿#import "PAT.Lib.IndexURLTree";
 #define FALSE 0;
 #define TRUE 1;
 
-var flag = TRUE;
+//var IUT = 
+//var flag = TRUE;
+//var duplicate = [FALSE, FALSE, FALSE];
+//var tree = [-1];
+//var result = [-1, 5];
+//
+//isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> Skip;
+//
+////getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
+////checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> addUrl(i, url);
+////addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
+//getUrlFromBuffer(i) = getUrl -> addUrl(i, 5); // Currently just use placeholder for url
+//addUrl(i,url) =  [call(isDuplicate,tree,url)==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
+//
+//#define goal (result == tree);
+//#define goal2 (flag==call(checkForDuplicates,tree));
+//System = getUrlFromBuffer(0) ||| getUrlFromBuffer(1);
+//#assert System reaches goal;
+//#assert System reaches goal2;
+
+var tree = new IndexURLTree();
+var result = [1];
 var duplicate = [FALSE, FALSE, FALSE];
-var tree = [-1];
-var result = [-1, 5];
+var fileExist = [FALSE, FALSE, FALSE];
 
-isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> Skip;
+getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
+checkIfExistInTree(i, url) = [tree.FileExists(url)==false]createNewFile(i, url) [] [tree.FileExists(url)==true]afterAddUrl(i);
+createNewFile(i, url) = checkIfFileExist{tree.FileExists(url)} -> createFile{tree.CreateFile(url)} -> writeDataToFile(i,url);
+writeDataToFile(i, url) = writeData{tree.WriteData(url)} -> afterAddUrl(i);
+// addUrl(i,url) =  [tree.Exists(i)==false]addToTree{tree.AddToTree(i)} -> afterAddUrl(i);
+afterAddUrl(i) = getUrlFromBuffer(i);
 
-//getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
-//checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> addUrl(i, url);
-//addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
-getUrlFromBuffer(i) = getUrl -> addUrl(i, 5); // Currently just use placeholder for url
-addUrl(i,url) =  [call(isDuplicate,tree,url)==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
-
-#define goal (result == tree);
-#define goal2 (flag==call(checkForDuplicates,tree));
-System = getUrlFromBuffer(0) ||| getUrlFromBuffer(1);
-#assert System reaches goal;
-#assert System reaches goal2;
+#define noDuplicateFileCreation (true == tree.FileExists(5));
+#define noDuplicateDataWrite (true == tree.FileExists(5));
+System = getUrlFromBuffer(0);
+#assert System reaches noDuplicateFileCreation;
+#assert System reaches noDuplicateDataWrite;
+//#assert System reaches goal;
+//#assert System reaches goal2;
 
 
 //1) IUT C# data structure (maybe an array, can refer to the prof email)

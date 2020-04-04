@@ -9,43 +9,58 @@ namespace PAT.Lib
 {    	  
     public class IndexURLTree : ExpressionValue
     {
-        public List<int> tree;
-        public int[] a;
+        // List of files that have been created
+        public List<int> fileList;
+        // List of data that have been written into file 
+        public List<int> dataList;
 
         // Needs a default constructor.
         public IndexURLTree() {
-            this.tree = new List<int>();
+            this.fileList = new List<int>();
+            this.dataList = new List<int>();
         }
 
         // tree: a list to be deep copied into the new IndexURLTree object.
-        public IndexURLTree(List<int> tree) {
-            List<int> clone = new List<int>();
+        public IndexURLTree(List<int> fileList, List<int> dataList) {
+            List<int> cloneFileList = new List<int>();
             
-            foreach(int i in tree) {
-                clone.Add(i);
+            foreach(int i in fileList) {
+                cloneFileList.Add(i);
             }
+            List<int> cloneDataList = new List<int>();
             
-            this.tree = clone;
+            foreach(int i in dataList) {
+                cloneDataList.Add(i);
+            }
+
+            this.fileList = cloneFileList;
+            this.dataList = cloneDataList;
         }
 
-        // Add url into tree
-        // url: the url to be added into the the tree.  
-        public bool AddToTree(int url) {
-            this.tree.Add(url);
-			return true;
+        public bool CreateFile(int url) {
+            this.fileList.Add(url);
+            return true;
         }
 
-        // Check if the url exists in the tree        
-        // url: the url to see if exist.        
-        public bool exists(int url) {
-            return tree.Contains(url);
+        public bool FileExists(int url) {
+            return this.fileList.Contains(url);
         }
-        
-        // Check if any duplicate exist in the tree.
-        public bool duplicateExist() {
-            return tree.GroupBy(x => x).Any(g => g.Count() > 1);
+
+        public bool WriteData(int url) {
+            this.dataList.Add(url);
+            return true;
         }
-      
+
+        public bool FileListDuplicateExist() {
+            var anyDuplicates = this.fileList.GroupBy(x => x).Any(g => g.Count() > 1);
+            return anyDuplicates;
+        }
+
+        public bool DataListDuplicateExist() {
+            var anyDuplicates = this.dataList.GroupBy(x => x).Any(g => g.Count() > 1);
+            return anyDuplicates;
+        }
+
         //---------------------------- For system use ------------------------------
         /// Returns the  string representation of the datatype.
         public override string ToString() {
@@ -55,7 +70,7 @@ namespace PAT.Lib
         /// Returns a deep clone of the current object.
         public override ExpressionValue GetClone()
         {
-            return new IndexURLTree(this.tree);
+            return new IndexURLTree(this.fileList, this.dataList);
         }
         
         /// Returns the compact string representation of the datatype.
@@ -65,7 +80,7 @@ namespace PAT.Lib
                 String result = "";
                 
                 
-                result += "[" + String.Join(", ", this.tree.Select(i => i.ToString()).ToArray()) + "], ";
+                result += "[FileList:[" + String.Join(", ", this.fileList.Select(i => i.ToString()).ToArray()) + "], ";
                 
                 
                 
