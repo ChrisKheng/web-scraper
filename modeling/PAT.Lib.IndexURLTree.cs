@@ -6,10 +6,7 @@ using PAT.Common.Classes.Expressions.ExpressionClass;
 
 //the namespace must be PAT.Lib, the class and method names can be arbitrary
 namespace PAT.Lib
-{    	
-    // Lists is a class which models an array of lists.
-    // It can be used to model the collection of queues of crawler and 
-    // the collection of buffers.        
+{    	  
     public class IndexURLTree : ExpressionValue
     {
         public List<int> tree;
@@ -20,7 +17,7 @@ namespace PAT.Lib
             this.tree = new List<int>();
         }
 
-        // lists: an array of lists to be deep copied into the new Lists object.
+        // tree: a list to be deep copied into the new IndexURLTree object.
         public IndexURLTree(List<int> tree) {
             List<int> clone = new List<int>();
             
@@ -31,22 +28,20 @@ namespace PAT.Lib
             this.tree = clone;
         }
 
-        // Appends all the elements in the given array to the end of the 
-        // target list.
-        // listNumber: the index of the target list.        
-        // Needs to return something for PAT code to work (i.e. cannot return void)
+        // Add url into tree
+        // url: the url to be added into the the tree.  
         public bool AddToTree(int url) {
             this.tree.Add(url);
 			return true;
         }
 
-        // Adds the given url into the target list.        
-        // listNumber: the index of the target list. (index starts from 0)
-        // url: the url to be added into the target list.        
+        // Check if the url exists in the tree        
+        // url: the url to see if exist.        
         public bool exists(int url) {
             return tree.Contains(url);
         }
         
+        // Check if any duplicate exist in the tree.
         public bool duplicateExist() {
             return tree.GroupBy(x => x).Any(g => g.Count() > 1);
         }
