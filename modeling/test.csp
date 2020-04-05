@@ -1,44 +1,40 @@
 ﻿#import "PAT.Lib.IndexURLTree";
-#define FALSE 0;
-#define TRUE 1;
+#import "PAT.Lib.Lists";
 
-//var IUT = 
-//var flag = TRUE;
-//var duplicate = [FALSE, FALSE, FALSE];
-//var tree = [-1];
-//var result = [-1, 5];
-//
-//isUrlDuplicated(i,url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> Skip;
-//
-////getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
-////checkIfExistInTree(i, url) = check{duplicate[i] = call(isDuplicate,tree,url)} -> addUrl(i, url);
-////addUrl(i,url) =  [duplicate[i]==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
-//getUrlFromBuffer(i) = getUrl -> addUrl(i, 5); // Currently just use placeholder for url
-//addUrl(i,url) =  [call(isDuplicate,tree,url)==FALSE]addToTree{tree = call(addToTree,tree,url)} -> Skip;
-//
-//#define goal (result == tree);
-//#define goal2 (flag==call(checkForDuplicates,tree));
-//System = getUrlFromBuffer(0) ||| getUrlFromBuffer(1);
-//#assert System reaches goal;
-//#assert System reaches goal2;
+#define BUFFER_SIZE 3;
+#define NUM_BUFFERS 2;
 
 var tree = new IndexURLTree();
-var result = [1];
-var duplicate = [FALSE, FALSE, FALSE];
-var fileExist = [FALSE, FALSE, FALSE];
+var result = [0,1,2];
 
-getUrlFromBuffer(i) = getUrl -> checkIfExistInTree(i, 5); // Currently just use placeholder for url
-checkIfExistInTree(i, url) = [tree.FileExists(url)==false]createNewFile(i, url) [] [tree.FileExists(url)==true]afterAddUrl(i);
-createNewFile(i, url) = checkIfFileExist{tree.FileExists(url)} -> createFile{tree.CreateFile(url)} -> writeDataToFile(i,url);
-writeDataToFile(i, url) = writeData{tree.WriteData(url)} -> afterAddUrl(i);
-// addUrl(i,url) =  [tree.Exists(i)==false]addToTree{tree.AddToTree(i)} -> afterAddUrl(i);
-afterAddUrl(i) = getUrlFromBuffer(i);
+var<Lists> buffers = new Lists(NUM_BUFFERS);
 
-#define noDuplicateFileCreation (true == tree.FileExists(5));
-#define noDuplicateDataWrite (true == tree.FileExists(5));
-System = getUrlFromBuffer(0);
-#assert System reaches noDuplicateFileCreation;
-#assert System reaches noDuplicateDataWrite;
+// Initialise each queue with some seed urls
+// a, b, c ... are just placeholder because of syntax
+var a = buffers.Append(0, [0, 1, 2]);
+var b = buffers.Append(1, [0, 1, 2]);
+var urlPolled = [-1(NUM_BUFFERS)];
+var fileExist = [-1(NUM_BUFFERS)];
+
+startAddUrlAndContent(i) = checkIfListEmpty(i);
+checkIfListEmpty(i) = [!buffers.isListEmpty(i)] listNotEmpty.i -> getUrlFromBuffer(i) [] [buffers.isListEmpty(i)] listEmpty.i -> Skip;
+getUrlFromBuffer(i) = getUrl.i{urlPolled[i] = buffers.PollFromList(i)}  -> checkIfExistInTree(i, urlPolled[i]);
+checkIfExistInTree(i, url) = [tree.FileExists(url)==false] makeDirectory.i -> createNewFileAtomic(i, url) [] [tree.FileExists(url)==true] afterAddUrl(i);
+createNewFileAtomic(i, url) = [tree.FileExists(url)==false] createFile.i.url{tree.CreateFile(url)} -> writeDataToFile(i,url) [] [tree.FileExists(url)==true] afterAddUrl(i); // If createNewFile is not atomic, will have duplicates. 
+// createNewFileNonAtomic(i, url) = nothingForNow; // If createNewFile is not atomic, will have duplicates. 
+writeDataToFile(i, url) = writeData.i.url{tree.WriteData(url)} -> afterAddUrl(i);
+afterAddUrl(i) = restart.i -> checkIfListEmpty(i);
+
+#define noDuplicateFileCreation (true == !tree.FileListDuplicateExists());
+#define noDuplicateDataWrite (true == !tree.DataListDuplicateExists());
+#define correct (true == tree.CheckCorrectness(result));
+
+System = |||i:{0..1} @ startAddUrlAndContent(i);
+
+#assert System deadlockfree;
+#assert System |= [] noDuplicateFileCreation;
+#assert System |= [] noDuplicateDataWrite;
+#assert System |= <> correct;
 //#assert System reaches goal;
 //#assert System reaches goal2;
 
