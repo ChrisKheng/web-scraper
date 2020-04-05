@@ -51,14 +51,33 @@ namespace PAT.Lib
             return true;
         }
 
-        public bool FileListDuplicateExist() {
+        public bool FileListDuplicateExists() {
             var anyDuplicates = this.fileList.GroupBy(x => x).Any(g => g.Count() > 1);
             return anyDuplicates;
         }
 
-        public bool DataListDuplicateExist() {
+        public bool DataListDuplicateExists() {
             var anyDuplicates = this.dataList.GroupBy(x => x).Any(g => g.Count() > 1);
             return anyDuplicates;
+        }
+        
+        // Check if every value in array are both in fileList and dataList
+        public bool ContainsAll(int[] array) {
+        	foreach(int i in array) {
+        		if (!this.fileList.Contains(i) || !this.dataList.Contains(i)) {
+        			return false;
+        		}
+        	}
+        	return true;
+        }
+        
+        public bool CheckCorrectness(int[] array) {
+        	if(this.fileList.Count() == this.dataList.Count()) {
+        		if (this.fileList.Count() == array.Length) {
+        			return ContainsAll(array) && !FileListDuplicateExists() && !DataListDuplicateExists();
+        		}
+        	}
+        	return false;
         }
 
         //---------------------------- For system use ------------------------------
