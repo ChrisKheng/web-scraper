@@ -10,6 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class IndexURLTree {
 
@@ -19,7 +22,13 @@ public class IndexURLTree {
     public String SOURCE_FILENAME = "source.txt";
     public String RESULT_FILENAME;
 
+    private ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
+
     private long size = 0;
+
+    public IndexURLTree() {
+        this.RESULT_FILENAME = "res.txt";
+    }
 
     public IndexURLTree(String outputFileName) {
         this.RESULT_FILENAME = outputFileName;
@@ -42,22 +51,37 @@ public class IndexURLTree {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
         File f = new File(path);
-        if (f.exists()) {
-            // file already exist
-            return false;
+//        if (f.exists()) {
+//            // file already exist
+//            return false;
+//        }
+        File srcFile = new File(f.getParent().concat("/" + SOURCE_FILENAME));
+
+        ReadWriteLock lock = lockMap.get(f.getPath());
+        if (lock == null) {
+            lock = new ReentrantReadWriteLock();
+            ReadWriteLock existingLock = lockMap.putIfAbsent(f.getPath(), lock);
+
+            if (existingLock != null) {
+                lock = existingLock;
+            }
         }
 
         try {
             f.getParentFile().mkdirs();
-            if (f.createNewFile()) {
+            lock.writeLock().lock();
+            if (!srcFile.exists()) {
+//            if (f.createNewFile()) {
                 // file did not exist, file created
                 writeDataToFile(f, d);
+                lock.writeLock().unlock();
                 synchronized (this) {
                     size++;
                 }
                 return true;
             } else {
                 // file did exist, file did not create
+                lock.writeLock().unlock();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,7 +145,7 @@ public class IndexURLTree {
 
         // Create source.txt
         File sourceF = new File(f.getParentFile().getPath() + "/" + SOURCE_FILENAME);
-        sourceF.createNewFile();
+//        sourceF.createNewFile();
         fw = new FileWriter(sourceF);
         fw.write(d.getNewUrl() + " --> " + d.getSourceUrl());
         fw.close();
