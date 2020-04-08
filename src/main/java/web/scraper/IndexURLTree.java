@@ -22,6 +22,7 @@ public class IndexURLTree {
     public String SOURCE_FILENAME = "source.txt";
     public String RESULT_FILENAME;
 
+    private int URL_LIMIT = 1000;
     private ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
 
     private long size = 0;
@@ -138,17 +139,19 @@ public class IndexURLTree {
     }
 
     private void writeDataToFile(File f, Data d) throws IOException {
-        // Create content.html
-        FileWriter fw = new FileWriter(f);
-        fw.write(d.getDocument());
-        fw.close();
-
         // Create source.txt
         File sourceF = new File(f.getParentFile().getPath() + "/" + SOURCE_FILENAME);
 //        sourceF.createNewFile();
-        fw = new FileWriter(sourceF);
+        FileWriter fw = new FileWriter(sourceF);
         fw.write(d.getNewUrl() + " --> " + d.getSourceUrl());
         fw.close();
+
+        // Create content.html
+        if (size < URL_LIMIT) {
+            fw = new FileWriter(f);
+            fw.write(d.getDocument());
+            fw.close();
+        }
     }
 
     @Deprecated
