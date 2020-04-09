@@ -23,7 +23,7 @@ public class IndexURLTree {
     public String RESULT_FILENAME;
 
     private int URL_LIMIT = 1000;
-    private ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
 
     private long size = 0;
 
@@ -91,6 +91,7 @@ public class IndexURLTree {
         return false;
     }
 
+
     /**
      * This method checks if the url is already stored in IUT
      *
@@ -125,7 +126,7 @@ public class IndexURLTree {
                 .forEach((path) -> {
                         try {
                             String output = new String(Files.readAllBytes(path));
-                            writer.append(output+"\n");
+                            writer.append(output);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -142,117 +143,16 @@ public class IndexURLTree {
         // Create source.txt
         File sourceF = new File(f.getParentFile().getPath() + "/" + SOURCE_FILENAME);
 //        sourceF.createNewFile();
-        FileWriter fw = new FileWriter(sourceF);
-        fw.write(d.getNewUrl() + " --> " + d.getSourceUrl());
+        FileWriter fw = new FileWriter(sourceF, true);
+        fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + "\n");
         fw.close();
 
         // Create content.html
         if (size < URL_LIMIT) {
-            fw = new FileWriter(f);
+            fw = new FileWriter(f, true);
             fw.write(d.getDocument());
             fw.close();
         }
-    }
-
-    @Deprecated
-    // This method is not used currently
-    private String navigateDirectory(String url, boolean createMissingDirectory) {
-        //TODO: This method will read the url, and return name of the file containing the url's html content
-        // If createMissingDirectory is true, it will add the url into all the indexes it passes through,
-        // and return a filename that the html content should be saved as.
-
-        // URL Example --> https://bn.wikipedia.org/wiki/%E0%A7%A7%E0%A7%AC%E0%A7%A7%E0%A7%AF
-        // http://www-solar.mcs.st-and.ac.uk/~clare/Lockyer/helium.html
-        // http://www.academia.edu/download/47998758/adma.20100114820160812-11384-qc0oo4.pdf
-
-        // Shall use string split for now, but can switch to guava splitter if too slow
-        // Currently only need path. If need the webpage, extension etc, check the getPathFromURL method
-//        String path = ROOT_DIRECTORY + getPathFromUrl(url);
-//
-//        File f = new File(path);
-//        if (f.mkdirs()) {
-//            // File don't exist
-//            System.out.println("don't exist");
-//        } else {
-//            // File already exist
-//            System.out.println("exist");
-//        }
-
-        // THE FOLLOWING IS JUST PSEUDO CODE!!! NOT WORKING YET.
-//        String currentIndexFile = ""; // Add in first index file here
-//        for (int i = 0; i < header.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, header[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-//
-//        for (int i = 0; i < webpage.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, webpage[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-//
-//        for (int i = 0; i < extension.length; i++) {
-//            currentIndexFile = searchForItem(currentIndexFile, extension[i]);
-//            if (currentIndexFile == null) {
-//                if (createMissingDirectory) {
-//                    // Add code to create the directory
-//                } else {
-//                    //exit
-//                }
-//                // Exit
-//            }
-//        }
-        return null;
-    }
-
-    /**
-     * This method takes in a url and breaks it down into 3 parts protocol, domain, and directory
-     * protocol is the http:// domain is abc.com directory is /page1/2/3 This method should be the
-     * method that controls the depth of our tree. Breakdown more = more depth breakdown less = less
-     * depth
-     *
-     * @param url the url to breakdown into path. Should contain at least protocol and domain
-     * @return an arraylist containing 3 string arrays containing protocol, domain and directory of
-     * the url
-     */
-    private ArrayList<String[]> breakdownUrl(String url) {
-
-        // Split url by the ://
-        // So we go from http://abc.com/a/b/c to an array with the following [http, abc.com/a/b/c]
-        String[] url_first_split = url.split("://", 2);
-        String[] protocol = new String[1];
-        protocol[0] = url_first_split[0];
-
-        // Split url without protocol by /
-        // This separates out the website address, and the directory behind.
-        // abc.com/a/b/c --> [abc.com, a/b/c]
-        String[] url_second_split = url_first_split[1].split("/", 2);
-
-        // abc.com --> [abc, com]
-        String[] domain = url_second_split[0].split("\\.");
-
-        // a/b/c --> [a, b, c]
-        String[] directory = null;
-        if (url_second_split.length > 1) {
-            directory = url_second_split[1].split("/");
-        } else {
-            directory = new String[0];
-        }
-
-        return new ArrayList<>(Arrays.asList(protocol, domain, directory));
     }
 
     /**
@@ -261,7 +161,7 @@ public class IndexURLTree {
      * @param url the url to breakdown into path. Should contain at least protocol and domain
      * @return a String containing the path of the url
      */
-    private String getPathFromUrl(String url) {
+    public String getPathFromUrl(String url) {
         ArrayList<String[]> breakdown = breakdownUrl(url);
         String[] protocol = breakdown.get(0);
         String[] domain = breakdown.get(1);
@@ -294,6 +194,47 @@ public class IndexURLTree {
         // TODO: possible duplicate URLs similar URLs but with -- and /
         // TODO: i.e. (abc.com/test/abc.html) & (abc.com/test--abc.html)
         return builder.toString();
+    }
+
+    /**
+     * This method takes in a url and breaks it down into 3 parts protocol, domain, and directory
+     * protocol is the http:// domain is abc.com directory is /page1/2/3 This method should be the
+     * method that controls the depth of our tree. Breakdown more = more depth breakdown less = less
+     * depth
+     *
+     * @param url the url to breakdown into path. Should contain at least protocol and domain
+     * @return an arraylist containing 3 string arrays containing protocol, domain and directory of
+     * the url
+     */
+    private ArrayList<String[]> breakdownUrl(String url) {
+        url = url.trim();
+        // Split url by the ://
+        // So we go from http://abc.com/a/b/c to an array with the following [http, abc.com/a/b/c]
+        String[] url_first_split = url.split("://", 2);
+        String[] protocol = new String[1];
+        protocol[0] = url_first_split[0];
+        String[] domain = new String[0];
+        String[] directory = new String[0];
+
+        // Split url without protocol by /
+        // This separates out the website address, and the directory behind.
+        // abc.com/a/b/c --> [abc.com, a/b/c]
+        if (url_first_split.length > 1 && url_first_split[1].length() > 0) {
+            String[] url_second_split = url_first_split[1].split("/", 2);
+
+            // abc.com --> [abc, com]
+            domain = url_second_split[0].split("\\.");
+
+            // a/b/c --> [a, b, c]
+            directory = null;
+            if (url_second_split.length > 1 && url_second_split[1].length() > 0) {
+                directory = url_second_split[1].split("/");
+            } else {
+                directory = new String[0];
+            }
+        }
+
+        return new ArrayList<>(Arrays.asList(protocol, domain, directory));
     }
 
     // File format should be in the form of key and value. Similar to the image they sent us.
