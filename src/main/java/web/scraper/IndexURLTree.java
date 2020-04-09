@@ -11,10 +11,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class IndexURLTree {
+
+    class CustomLock extends ReentrantReadWriteLock {
+
+        public int count = 0;
+
+        public CustomLock() {
+            super();
+        }
+    }
 
     // Maybe these 2 should in the constructor instead.
     public String ROOT_DIRECTORY = "data";
@@ -23,7 +31,7 @@ public class IndexURLTree {
     public String RESULT_FILENAME;
 
     private int URL_LIMIT = 1000;
-    public ConcurrentHashMap<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
+    public ConcurrentHashMap<String, CustomLock> lockMap = new ConcurrentHashMap<>();
 
     private long size = 0;
 
@@ -57,16 +65,14 @@ public class IndexURLTree {
 //            return false;
 //        }
         File srcFile = new File(f.getParent().concat("/" + SOURCE_FILENAME));
-
-        ReadWriteLock lock = lockMap.get(f.getPath());
-        if (lock == null) {
-            lock = new ReentrantReadWriteLock();
-            ReadWriteLock existingLock = lockMap.putIfAbsent(f.getPath(), lock);
-
-            if (existingLock != null) {
-                lock = existingLock;
+        String lockKey =  f.getPath();
+        CustomLock lock = lockMap.compute(lockKey, (k, v) -> {
+            if (v == null) {
+                v = new CustomLock();
             }
-        }
+            v.count += 1;
+            return v;
+        });
 
         try {
             f.getParentFile().mkdirs();
@@ -76,6 +82,7 @@ public class IndexURLTree {
                 // file did not exist, file created
                 writeDataToFile(f, d);
                 lock.writeLock().unlock();
+                deleteLock(lockKey);
                 synchronized (this) {
                     size++;
                 }
@@ -83,12 +90,23 @@ public class IndexURLTree {
             } else {
                 // file did exist, file did not create
                 lock.writeLock().unlock();
+                deleteLock(lockKey);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         return false;
+    }
+
+    private void deleteLock(String lockKey) {
+        lockMap.computeIfPresent(lockKey, (k,v)-> {
+            v.count -= 1;
+            if (v.count <= 0) {
+                return null;
+            }
+            return v;
+        });
     }
 
 
