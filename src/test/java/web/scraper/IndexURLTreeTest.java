@@ -405,6 +405,8 @@ public class IndexURLTreeTest {
             }
         }
 
+        final long startTime = System.currentTimeMillis();
+
         for (int i = 0; i < numBuffers; i++) {
             indexBuilders.get(i).start();
         }
@@ -415,6 +417,11 @@ public class IndexURLTreeTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        final long endTime = System.currentTimeMillis();
+        System.out
+            .println("Total execution time: " + ((endTime - startTime) / 1000.0) + " seconds");
+
         try {
             System.out.println(IUT.size());
             // Ensure size of IUT is correct
@@ -472,6 +479,8 @@ public class IndexURLTreeTest {
             buffers.get(i % numBuffers).add(d);
         }
 
+        final long startTime = System.currentTimeMillis();
+
         for (int i = 0; i < numBuffers; i++) {
             indexBuilders.get(i).start();
 
@@ -483,6 +492,11 @@ public class IndexURLTreeTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        final long endTime = System.currentTimeMillis();
+        System.out
+            .println("Total execution time: " + ((endTime - startTime) / 1000.0) + " seconds");
+
         try {
             String srcPath;
             for (int i = 0; i < SIZE; i++) {

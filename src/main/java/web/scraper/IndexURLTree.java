@@ -60,11 +60,11 @@ public class IndexURLTree {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
         File f = new File(path);
-//        if (f.exists()) {
-//            // file already exist
-//            return false;
-//        }
         File srcFile = new File(f.getParent().concat("/" + SOURCE_FILENAME));
+        if (srcFile.exists()) {
+            // file already exist
+            return false;
+        }
         String lockKey =  f.getPath();
         CustomLock lock = lockMap.compute(lockKey, (k, v) -> {
             if (v == null) {
@@ -167,7 +167,7 @@ public class IndexURLTree {
 
         // Create content.html
         if (size < URL_LIMIT) {
-            fw = new FileWriter(f, true);
+            fw = new FileWriter(f);
             fw.write(d.getDocument());
             fw.close();
         }
