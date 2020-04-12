@@ -6,7 +6,8 @@ public class Merger {
             throw new IllegalArgumentException("Input parameters is incorrect!");
         }
         
-        String outputFileName = args[1];
-        new IndexURLTree(outputFileName).writeResult();
+        // 1000 is the default number of pages to store
+        String outputFileName = args[1];        
+        new IndexURLTree(outputFileName, 1000).writeResult();
     }
 }
