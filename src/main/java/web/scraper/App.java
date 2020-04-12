@@ -30,6 +30,7 @@ public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 1000;
     public static int runtime;
+    public static int numPagesToStore;
     public static String inputFileName;
     public static String outputFileName;
     private Logger logger;
@@ -41,7 +42,7 @@ public class App implements Callable<Void> {
 
     public App() {
         this.logger = Logger.getLogger("App");
-        this.tree = new IndexURLTree(outputFileName);
+        this.tree = new IndexURLTree(outputFileName, App.numPagesToStore);
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
@@ -235,7 +236,7 @@ public class App implements Callable<Void> {
     }
 
     // Parse input parameters
-    public static void setParameters(String[] args) {
+    public static void parseAndSetParameters(String[] args) {
         try {
             for (int i = 0; i < args.length; i += 2) {
                 String flag = args[i];
@@ -253,6 +254,8 @@ public class App implements Callable<Void> {
                     App.inputFileName = argument;                    
                 } else if ("-output".equals(flag)) {
                     App.outputFileName = argument;
+                } else if ("-storedPageNum".equals(flag)) {
+                    App.numPagesToStore = Integer.parseInt(argument);
                 } else {
                     throw new IllegalArgumentException();                      
                 }
@@ -266,7 +269,7 @@ public class App implements Callable<Void> {
     }
 
     public static void main(String[] args) {        
-        setParameters(args);
+        parseAndSetParameters(args);
         
         ExecutorService executor = Executors.newSingleThreadExecutor();
 

@@ -30,17 +30,19 @@ public class IndexURLTree {
     public String SOURCE_FILENAME = "source.txt";
     public String RESULT_FILENAME;
 
-    private int URL_LIMIT = 1000;
+    private int URL_LIMIT;
     public ConcurrentHashMap<String, CustomLock> lockMap = new ConcurrentHashMap<>();
 
     private long size = 0;
 
     public IndexURLTree() {
         this.RESULT_FILENAME = "res.txt";
+        this.URL_LIMIT = 1000;
     }
 
-    public IndexURLTree(String outputFileName) {
+    public IndexURLTree(String outputFileName, int urlLimit) {
         this.RESULT_FILENAME = outputFileName;
+        this.URL_LIMIT = urlLimit;
     }
 
     // A stub method
