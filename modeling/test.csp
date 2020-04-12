@@ -3,33 +3,39 @@
 
 #define BUFFER_SIZE 3;
 #define NUM_BUFFERS 2;
+#define NUM_URLS 10;
+
+channel fileLocks[NUM_URLS] 1;
 
 var tree = new IndexURLTree();
-var result = [0,1,2];
+var result = [0,1,2,3,4,5];
 
 var<Lists> buffers = new Lists(NUM_BUFFERS);
 
 // Initialise each queue with some seed urls
 // a, b, c ... are just placeholder because of syntax
 var a = buffers.Append(0, [0, 1, 2]);
-var b = buffers.Append(1, [0, 1, 2]);
+var b = buffers.Append(1, [0, 1, 2,3,4,5]);
 var urlPolled = [-1(NUM_BUFFERS)];
-var fileExist = [-1(NUM_BUFFERS)];
+var fileExist = [false(NUM_BUFFERS)];
 
-startAddUrlAndContent(i) = checkIfListEmpty(i);
-checkIfListEmpty(i) = [!buffers.isListEmpty(i)] listNotEmpty.i -> getUrlFromBuffer(i) [] [buffers.isListEmpty(i)] listEmpty.i -> Skip;
-getUrlFromBuffer(i) = getUrl.i{urlPolled[i] = buffers.PollFromList(i)}  -> checkIfExistInTree(i, urlPolled[i]);
-checkIfExistInTree(i, url) = [tree.FileExists(url)==false] makeDirectory.i -> createNewFileAtomic(i, url) [] [tree.FileExists(url)==true] afterAddUrl(i);
-createNewFileAtomic(i, url) = [tree.FileExists(url)==false] createFile.i.url{tree.CreateFile(url)} -> writeDataToFile(i,url) [] [tree.FileExists(url)==true] afterAddUrl(i); // If createNewFile is not atomic, will have duplicates. 
-// createNewFileNonAtomic(i, url) = nothingForNow; // If createNewFile is not atomic, will have duplicates. 
-writeDataToFile(i, url) = writeData.i.url{tree.WriteData(url)} -> afterAddUrl(i);
-afterAddUrl(i) = restart.i -> checkIfListEmpty(i);
+
+StartAddUrlAndContent(i) = CheckIfListEmpty(i);
+CheckIfListEmpty(i) = [!buffers.isListEmpty(i)] listNotEmpty.i -> GetUrlFromBuffer(i) [] [buffers.isListEmpty(i)] listEmpty.i -> Skip;
+GetUrlFromBuffer(i) = getUrl.i{urlPolled[i] = buffers.PollFromList(i)}  -> FirstCheckIfExistInTree(i, urlPolled[i]); // There is supposed to be one more check for file exist here. But its kinda awkward to write :\ See next line. 
+FirstCheckIfExistInTree(i, url) = check.i.url{var exist = tree.FileExists(url); fileExist[i] = exist} -> (([fileExist[i] == false]Lock(i, url)) [] ([fileExist[i] == true]AfterAddUrl(i)));
+Lock(i, url) = fileLocks[url]!i -> SecondCheckIfExistInTree(i, url);
+SecondCheckIfExistInTree(i, url) = check.i.url{var exist = tree.FileExists(url); fileExist[i] = exist} -> (([fileExist[i] == false]WriteDataToFile(i, url)) [] ([fileExist[i] == true]Unlock(i,url)));
+WriteDataToFile(i, url) = createFile.i.url{tree.CreateFile(url)} -> writeData.i.url{tree.WriteData(url)} -> Unlock(i, url);
+Unlock(i, url) = fileLocks[url]?i -> AfterAddUrl(i);
+AfterAddUrl(i) = restart.i -> CheckIfListEmpty(i);
+
 
 #define noDuplicateFileCreation (true == !tree.FileListDuplicateExists());
 #define noDuplicateDataWrite (true == !tree.DataListDuplicateExists());
 #define correct (true == tree.CheckCorrectness(result));
 
-System = |||i:{0..1} @ startAddUrlAndContent(i);
+System = |||i:{0..1} @ StartAddUrlAndContent(i);
 
 #assert System deadlockfree;
 #assert System |= [] noDuplicateFileCreation;
@@ -43,8 +49,3 @@ System = |||i:{0..1} @ startAddUrlAndContent(i);
 //2) IUT check for duplicate
 //3) IBT transfer urls from buffer to tree
 
-
-
-
-
- 
