@@ -29,15 +29,20 @@ import java.util.regex.Pattern;
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 1000;
+    public static final int NUM_BUFFERS = 3;
+    public static final int NUM_CRAWLERS = NUM_BUFFERS * 2;    
     public static int runtime;
     public static int numPagesToStore;
     public static String inputFileName;
     public static String outputFileName;
+
     private Logger logger;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
     private List<List<Seed>> queues; // synchronised in the App constructor
+    private List<Crawler> crawlers;
     private List<IndexBuilder> builders;
+    private StatsWriter statsWriter;
     private List<Thread> threads;
 
     public App() {
@@ -46,7 +51,6 @@ public class App implements Callable<Void> {
         this.buffers = new LinkedList<>();
         IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
-        this.builders = new LinkedList<>();
         this.threads = new LinkedList<>();
     }
 
@@ -54,86 +58,40 @@ public class App implements Callable<Void> {
         logger.info("Starting........ =D");
         initialise();
 
-        // Need to use addAll instead of directly assigining to queues because initialise() is put before getURLSeeds()
-        List<Seed> seeds = getURLSeeds();
-        this.queues.addAll(splitList(seeds, 6));
+        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores(NUM_BUFFERS);
+        List<Semaphore> builderSemaphores = getBuilderSempahores(NUM_BUFFERS);
 
-        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores(3);
-        List<Semaphore> builderSemaphores = getBuilderSempahores(3);
+        // Create all threads
+        this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
+        this.builders = getBuilders(crawlerSemaphores, builderSemaphores);
+        this.statsWriter = new StatsWriter(this.tree, this.queues, this.buffers);
 
-        Crawler crawler1 = new Crawler(queues.get(0), tree, this.buffers.get(0), crawlerSemaphores.get(0),
-            builderSemaphores.get(0));
-        Crawler crawler2 = new Crawler(queues.get(1), tree, this.buffers.get(0), crawlerSemaphores.get(0),
-            builderSemaphores.get(0));
-        Crawler crawler3 = new Crawler(queues.get(2), tree, this.buffers.get(1), crawlerSemaphores.get(1), 
-            builderSemaphores.get(1));
-        Crawler crawler4 = new Crawler(queues.get(3), tree, this.buffers.get(1), crawlerSemaphores.get(1),
-            builderSemaphores.get(1));
-        Crawler crawler5 = new Crawler(queues.get(4), tree, this.buffers.get(2), crawlerSemaphores.get(2),
-            builderSemaphores.get(2));
-        Crawler crawler6 = new Crawler(queues.get(5), tree, this.buffers.get(2), crawlerSemaphores.get(2),
-            builderSemaphores.get(2));
-
-        IndexBuilder builder1 = new IndexBuilder(tree, this.buffers.get(0), crawlerSemaphores.get(0),
-            builderSemaphores.get(0));
-        IndexBuilder builder2 = new IndexBuilder(tree, this.buffers.get(1), crawlerSemaphores.get(1),
-            builderSemaphores.get(1));
-        IndexBuilder builder3 = new IndexBuilder(tree, this.buffers.get(2), crawlerSemaphores.get(2),
-            builderSemaphores.get(2));
-        builders.add(builder1);
-        builders.add(builder2);
-        builders.add(builder3);
-
-        Thread stats = new StatsWriter(tree, queues, this.buffers);
-
-        // Add all threads to a list
-        threads.add(crawler1);
-        threads.add(crawler2);
-        threads.add(crawler3);
-        threads.add(crawler4);
-        threads.add(crawler5);
-        threads.add(crawler6);
-        threads.add(builder1);
-        threads.add(builder2);
-        threads.add(builder3);
-        threads.add(stats);
+        // Add all threads
+        this.threads.addAll(crawlers);
+        this.threads.addAll(builders);
+        this.threads.add(statsWriter);
 
         // Start all threads
-        crawler1.start();
-        crawler2.start();
-        crawler3.start();
-        crawler4.start();
-        crawler5.start();
-        crawler6.start();
-
-        // Commented out ib thread start() so that the program will terminate after all crawler threads have
-        // returned.
-        // If the ib thread is still running, the program will not terminate.
-        builder1.start();
-        builder2.start();
-        builder3.start();
-
-        stats.start();
-
+        this.threads.forEach(thread -> thread.start());
+        
         try {
-            crawler1.join();
-            logger.info(String.format("crawler %d joined...............................", crawler1.getId()));
+            for (int i = 0; i < NUM_CRAWLERS; i++) {
+                Crawler crawler = this.crawlers.get(i);
+                crawler.join();
+                logger.info(String.format("Crawler %d joined...............................", crawler.getId()));
+            }
 
-            crawler2.join();
-            logger.info(String.format("crawler %d joined...............................", crawler2.getId()));
+            this.builders.forEach(builder -> builder.interrupt());
 
-            crawler3.join();
-            logger.info(String.format("crawler %d joined...............................", crawler3.getId()));
+            for (int i = 0; i < NUM_BUFFERS; i++) {
+                IndexBuilder builder = this.builders.get(i);
+                builder.join();
+                logger.info(String.format("Builder %d joined...............................", builder.getId()));
+            }
 
-            crawler4.join();
-            logger.info(String.format("crawler %d joined...............................", crawler4.getId()));
-
-            crawler5.join();
-            logger.info(String.format("crawler %d joined...............................", crawler5.getId()));
-
-            crawler6.join();
-            logger.info(String.format("crawler %d joined...............................", crawler6.getId()));
-        } catch (InterruptedException e) {
+            this.statsWriter.interrupt();
+            this.statsWriter.join();
+         } catch (InterruptedException e) {
             logger.info("App starting to terminate..................");
             threads.forEach(thread -> thread.interrupt());
             threads.forEach(thread -> {
@@ -143,13 +101,16 @@ public class App implements Callable<Void> {
                     er.printStackTrace();
                 }
             });
-            logger.info("App exiting...................");
         }
-
+        
+        logger.info("App exiting...................");
         return null;
     }
     
     public void initialise() {
+        List<Seed> seeds = getURLSeeds();
+        this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
+
         Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers, this.queues, this.builders));
 
         // The following 2 line removes log from the following 2 sources.
@@ -166,6 +127,28 @@ public class App implements Callable<Void> {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }    
+
+    public List<Crawler> getCrawlers(List<Semaphore> crawlerSemaphores, List<Semaphore> builderSemaphores) {
+        List<Crawler> crawlers = new ArrayList<>();
+
+        for (int i = 0; i < NUM_CRAWLERS; i++) {
+            crawlers.add(new Crawler(this.queues.get(i), this.tree, this.buffers.get(i/2), crawlerSemaphores.get(i/2),
+               builderSemaphores.get(i/2)));
+        }
+
+        return crawlers;
+    }
+
+    public List<IndexBuilder> getBuilders(List<Semaphore> crawlerSemaphores, List<Semaphore> builderSemaphores) {
+        List<IndexBuilder> builders = new ArrayList<>();
+
+        for (int i = 0; i < NUM_BUFFERS; i++) {
+            builders.add(new IndexBuilder(this.tree, this.buffers.get(i), crawlerSemaphores.get(i),
+                builderSemaphores.get(i)));
+        }
+
+        return builders;
     }
 
     // Return a list with n sempahores for crawlers
