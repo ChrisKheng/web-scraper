@@ -100,7 +100,7 @@ public class Cleaner extends Thread {
             FileWriter writer = new FileWriter(file);
 
             long numUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
-            this.count += builders.stream().mapToLong(builder -> builder.getCount()).sum();
+            this.count += builders.stream().mapToLong(builder -> builder.getCount()).sum();            
 
             writer.write("\nFinal statistics:\n");
             // TODO: add findURLs() method to calculate no. of URLs in IUT
