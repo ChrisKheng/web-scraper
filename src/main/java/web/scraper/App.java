@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 1000;
-    public static final int NUM_BUFFERS = 3;
+    public static final int NUM_BUFFERS = 4;
     public static final int NUM_CRAWLERS = NUM_BUFFERS * 2;    
     public static int runtime;
     public static int numPagesToStore;
@@ -49,7 +49,7 @@ public class App implements Callable<Void> {
         this.logger = Logger.getLogger("App");
         this.tree = new IndexURLTree(outputFileName, App.numPagesToStore);
         this.buffers = new LinkedList<>();
-        IntStream.range(0, 3).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
+        IntStream.range(0, NUM_BUFFERS).forEach(x -> buffers.add(Collections.synchronizedList(new LinkedList<>())));
         this.queues = new LinkedList<>();
         this.threads = new LinkedList<>();
     }
@@ -58,8 +58,8 @@ public class App implements Callable<Void> {
         logger.info("Starting........ =D");
         initialise();
 
-        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores(NUM_BUFFERS);
-        List<Semaphore> builderSemaphores = getBuilderSempahores(NUM_BUFFERS);
+        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores();
+        List<Semaphore> builderSemaphores = getBuilderSempahores();
 
         // Create all threads
         this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
@@ -73,6 +73,7 @@ public class App implements Callable<Void> {
 
         // Start all threads
         this.threads.forEach(thread -> thread.start());
+
         
         try {
             for (int i = 0; i < NUM_CRAWLERS; i++) {
@@ -80,6 +81,7 @@ public class App implements Callable<Void> {
                 crawler.join();
                 logger.info(String.format("Crawler %d joined...............................", crawler.getId()));
             }
+
 
             this.builders.forEach(builder -> builder.interrupt());
 
@@ -152,10 +154,10 @@ public class App implements Callable<Void> {
     }
 
     // Return a list with n sempahores for crawlers
-    public List<Semaphore> getCrawlerSemaphores(int n) {
+    public List<Semaphore> getCrawlerSemaphores() {
         List<Semaphore> list = new ArrayList<>();
 
-        IntStream.range(0, n).forEach(i -> {
+        IntStream.range(0, NUM_BUFFERS).forEach(i -> {
             list.add(new Semaphore(BUFFER_SIZE));
         });
 
@@ -163,10 +165,10 @@ public class App implements Callable<Void> {
     }
 
     // Return a list with n sempahores for builders
-    public List<Semaphore> getBuilderSempahores(int n) {
+    public List<Semaphore> getBuilderSempahores() {
         List<Semaphore> list = new ArrayList<>();
 
-        IntStream.range(0, n).forEach(i -> {
+        IntStream.range(0, NUM_BUFFERS).forEach(i -> {
             list.add(new Semaphore(0));
         });
 
