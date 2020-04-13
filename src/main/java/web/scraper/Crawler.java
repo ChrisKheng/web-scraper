@@ -74,34 +74,28 @@ public class Crawler extends CustomThread {
             String searchUrl = seed.getNewUrl();
 
             try {
-                HtmlPage page = client.getPage(searchUrl);
-                List<String> urls = getUrls(page);
-                logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
-                processUrls(searchUrl, urls);
-
-                if (!sourceUrl.isEmpty()) {
-                    // Add to buffer (need to put inside the if statement)
-                    crawlerSemaphore.acquire();
-                    logger.info(getFormattedMessage(String.format("entering critical section.............")));
+                try {
+                    // Attempt to visit the url
+                    HtmlPage page = client.getPage(searchUrl);
+                    List<String> urls = getUrls(page);
+                    logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
+                    processUrls(searchUrl, urls);
 
                     Data newData = new Data(sourceUrl, searchUrl, page.asXml());
-                    buffer.add(newData);
+                    addToBuffer(newData);
+                } catch (FailingHttpStatusCodeException e) {
+                    logger.warning(getFormattedMessage(e.getMessage()));
+                    logger.warning(getFormattedMessage(searchUrl));
+                    
+                    // Add dead url into buffer
+                    Data newData = new Data(sourceUrl, searchUrl);
+                    addToBuffer(newData);
 
-                    builderSemaphore.release();
-                    logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
+                    logger.info(getFormattedMessage("Going to handle 404........."));
+                    handle404Issue(searchUrl);
                 }
-            } catch (FailingHttpStatusCodeException e) {
-                logger.warning(getFormattedMessage(e.getMessage()));
-
-                logger.warning(getFormattedMessage(searchUrl));
-
-                if ("https://plantsvegetarianfood2556futurelife.blogspot.com/".equals(searchUrl)) {
-                    continue;
-                }
-                logger.info(getFormattedMessage("Going to handle 404........."));
-                handle404Issue(searchUrl);
-            } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException|
-                MalformedURLException e) {
+           } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException
+                    | MalformedURLException e) {
                 logger.warning(getFormattedMessage(e.getMessage()));
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -117,30 +111,54 @@ public class Crawler extends CustomThread {
         logger.info(getFormattedMessage("exiting.............."));
     }
 
+    // Add the data object to the buffer if the sourceUrl is not empty
+    public void addToBuffer(Data newData) throws InterruptedException {
+        if (newData.getSourceUrl().isEmpty()) {
+            return;
+        }        
+
+        crawlerSemaphore.acquire();
+        logger.info(getFormattedMessage(String.format("entering critical section.............")));
+
+        buffer.add(newData);
+
+        builderSemaphore.release();
+        logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
+    }
+
     // Extract the root of the url and add it to the queue instead
     private void handle404Issue(String searchUrl) {
         logger.info(getFormattedMessage("Now in handle404................"));
 
-        Matcher m = rootPattern.matcher(searchUrl);
+        synchronized (Crawler.class) {
+            Matcher m = rootPattern.matcher(searchUrl);
 
-        // If the url does not match the rootPattern
-        if (!m.find()) {
-            logger.info("Doesn't match url pattern");
-            return;
-        }
+            // If the url does not match the rootPattern
+            if (!m.find()) {
+                logger.info("Doesn't match url pattern");
+                return;
+            }
 
-        logger.info(getFormattedMessage("After matching................"));
+            logger.info(getFormattedMessage("After matching................"));
 
-        String rootUrl = m.group(0);
-        Seed newSeed = new Seed(searchUrl, rootUrl);
+            String rootUrl = m.group(0);
 
-        logger.info("Entering if else statement");
-        // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
-        if (this.queue.contains(newSeed)) {
-            logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));            
-        } else {
-            this.queue.add(newSeed);
-            logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
+            // To prevent using an invalid 404 url again
+            if (rootUrl.equals(searchUrl)) {
+                logger.info(getFormattedMessage("Skipping as rootUrl is the same as original"));
+                return;
+            }
+
+            Seed newSeed = new Seed(searchUrl, rootUrl);
+
+            logger.info("Entering if else statement");
+            // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
+            if (this.queue.contains(newSeed)) {
+                logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));
+            } else {
+                this.queue.add(newSeed);
+                logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
+            }
         }
 
         logger.info(getFormattedMessage("Getting out from handle404................"));

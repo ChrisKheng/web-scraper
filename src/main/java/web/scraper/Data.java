@@ -4,11 +4,22 @@ class Data {
     private String sourceUrl;
     private String newUrl;
     private String document;
+    private boolean isNewUrlDead;
 
-    public Data(String s, String n, String d) {
-        this.sourceUrl = s;
-        this.newUrl = n;
-        this.document = d;
+    public Data(String sourceUrl, String newUrl, String document) {
+        this(sourceUrl, newUrl, document, false);
+    }
+
+    // Used when the newUrl is dead
+    public Data(String sourceUrl, String newUrl) {
+        this(sourceUrl, newUrl, "", true);
+    }
+
+    private Data(String sourceUrl, String newUrl, String document, boolean isNewUrlDead) {
+        this.sourceUrl = sourceUrl;
+        this.newUrl = newUrl;
+        this.document = document;
+        this.isNewUrlDead = isNewUrlDead;
     }
 
     public String getSourceUrl() {
@@ -21,6 +32,13 @@ class Data {
 
     public String getDocument() {
         return this.document;
+    }
+
+    /**
+     * @return true if the new url is dead (e.g. 404 not found)
+     */
+    public boolean isNewUrlDead() {
+        return isNewUrlDead;
     }
 
     @Override

@@ -40,7 +40,7 @@ public class Cleaner extends Thread {
         }
 
         writeRemainingToTree();        
-        writeFromTreeToDisk();
+        tree.writeResult();
         writeFromQueueToDisk();
         writeStatsToDisk();
 
@@ -51,7 +51,7 @@ public class Cleaner extends Thread {
         for (List<Data> buffer : buffers) {
             for (Data data : buffer) {
                 try {
-                    if (tree.addURLandContent(data.getNewUrl() , data.getDocument())) {
+                    if (tree.addURLandContent(data)) {
                         this.count++;
                     }
                 } catch (Exception e) {
@@ -59,25 +59,6 @@ public class Cleaner extends Thread {
                 }
             }
         }
-    }
-
-    public void writeFromTreeToDisk() {
-        try {
-            File file = new File(App.outputFileName);
-            file.createNewFile();
-
-            FileWriter writer = new FileWriter(file);
-
-            // TODO: traverse entire directory tree to write URLs (and HTML?) into file
-            // for (String url : tree) {
-            //     writer.write(url);
-            //     writer.write("\n");
-            // }
-
-           writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } 
     }
 
     public void writeFromQueueToDisk() {
@@ -91,6 +72,7 @@ public class Cleaner extends Thread {
             File file = new File("./res2.txt");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
+            writer.write("................. Remaining new URLs in queues that has not been crawled ............\n");
             writer.write(String.format("Total size: %d\n", this.set.size()));
 
             for (String url : this.set) {

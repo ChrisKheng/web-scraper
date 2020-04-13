@@ -51,7 +51,23 @@ jar {
 }
 
 shadowJar {
-  shadowJar.archiveFileName = 'Cawler.jar'
+  mergeServiceFiles();
+}
+
+task shadowJar2(type: Jar, dependsOn: shadowJar) {
+  archiveName = 'cawler.jar'
+  manifest {
+      attributes('Main-Class': 'web.scraper.App')
+  }
+  from zipTree(shadowJar.archivePath)
+}
+
+task shadowJar3(type: Jar, dependsOn: shadowJar) {
+  archiveName = 'merger.jar'
+  manifest {
+      attributes('Main-Class': 'web.scraper.Merger')
+  }
+  from zipTree(shadowJar.archivePath)
 }
 
 java {

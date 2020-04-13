@@ -5,9 +5,10 @@ rm statistics.txt
 rm -r data
 
 # Build the jar file first
-./gradlew shadowJar
+./gradlew shadowJar2
+./gradlew shadowJar3
 
 cd build/libs
 
 # Run the jar file
-java -jar Cawler.jar -time 1h -input seed.txt -output res.txt
+java -jar cawler.jar -time 1h -input seed.txt -output res.txt

@@ -1,0 +1,51 @@
+﻿#import "PAT.Lib.IndexURLTree";
+#import "PAT.Lib.Lists";
+
+#define BUFFER_SIZE 3;
+#define NUM_BUFFERS 2;
+#define NUM_URLS 10;
+
+channel fileLocks[NUM_URLS] 1;
+
+var tree = new IndexURLTree();
+var result = [0,1,2,3,4,5];
+
+var<Lists> buffers = new Lists(NUM_BUFFERS);
+
+// Initialise each queue with some seed urls
+// a, b, c ... are just placeholder because of syntax
+var a = buffers.Append(0, [0, 1, 2]);
+var b = buffers.Append(1, [0, 1, 2,3,4,5]);
+var urlPolled = [-1(NUM_BUFFERS)];
+var fileExist = [false(NUM_BUFFERS)];
+
+
+StartAddUrlAndContent(i) = CheckIfListEmpty(i);
+CheckIfListEmpty(i) = [!buffers.isListEmpty(i)] listNotEmpty.i -> GetUrlFromBuffer(i) [] [buffers.isListEmpty(i)] listEmpty.i -> Skip;
+GetUrlFromBuffer(i) = getUrl.i{urlPolled[i] = buffers.PollFromList(i)}  -> FirstCheckIfExistInTree(i, urlPolled[i]); // There is supposed to be one more check for file exist here. But its kinda awkward to write :\ See next line. 
+FirstCheckIfExistInTree(i, url) = check.i.url{var exist = tree.FileExists(url); fileExist[i] = exist} -> (([fileExist[i] == false]Lock(i, url)) [] ([fileExist[i] == true]AfterAddUrl(i)));
+Lock(i, url) = fileLocks[url]!i -> SecondCheckIfExistInTree(i, url);
+SecondCheckIfExistInTree(i, url) = check.i.url{var exist = tree.FileExists(url); fileExist[i] = exist} -> (([fileExist[i] == false]WriteDataToFile(i, url)) [] ([fileExist[i] == true]Unlock(i,url)));
+WriteDataToFile(i, url) = createFile.i.url{tree.CreateFile(url)} -> writeData.i.url{tree.WriteData(url)} -> Unlock(i, url);
+Unlock(i, url) = fileLocks[url]?i -> AfterAddUrl(i);
+AfterAddUrl(i) = restart.i -> CheckIfListEmpty(i);
+
+
+#define noDuplicateFileCreation (true == !tree.FileListDuplicateExists());
+#define noDuplicateDataWrite (true == !tree.DataListDuplicateExists());
+#define correct (true == tree.CheckCorrectness(result));
+
+System = |||i:{0..1} @ StartAddUrlAndContent(i);
+
+#assert System deadlockfree;
+#assert System |= [] noDuplicateFileCreation;
+#assert System |= [] noDuplicateDataWrite;
+#assert System |= <> correct;
+//#assert System reaches goal;
+//#assert System reaches goal2;
+
+
+//1) IUT C# data structure (maybe an array, can refer to the prof email)
+//2) IUT check for duplicate
+//3) IBT transfer urls from buffer to tree
+
