@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 public class Cleaner extends Thread {
+    private App app;
     private IndexURLTree tree;
     private List<List<Data>> buffers;
     private List<List<Seed>> queues;
@@ -14,37 +15,43 @@ public class Cleaner extends Thread {
     private TreeSet<String> set;
     private long count;
 
-    public Cleaner(IndexURLTree tree, List<List<Data>> buffers, List<List<Seed>> queues, List<IndexBuilder> builders) {
-        this.tree = tree;
-        this.buffers = buffers;
-        this.queues = queues;
-        this.builders = builders;
+    public Cleaner(App app) {
+        this.app = app;
         this.count = 0;
         this.set = new TreeSet<>();
     }
 
     public void run() {
         System.out.println("\nStart cleaning............................");
-
-        int size = buffers.stream().mapToInt(buffer -> buffer.size()).sum();
-
-        boolean isEmpty = true;
-        for (List<Data> buffer: buffers) {
-            if (!buffer.isEmpty()) {
-                isEmpty = false;
-            }
-        }
-
-        if (isEmpty) {
-            System.out.printf("Buffers are still empty cuz initial seeds hasn't finished yet\n", isEmpty);
-        }
-
+        initialise();
+        
+        checkIfBufferIsEmpty();
         writeRemainingToTree();        
-        tree.writeResult();
+        this.tree.writeResult();
         writeFromQueueToDisk();
         writeStatsToDisk();
 
         System.out.println("Done!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+
+    public void initialise() {
+        this.tree = app.getTree();
+        this.buffers = app.getBuffers();
+        this.queues = app.getQueues();
+        this.builders = app.getBuilders();
+    }
+
+    public void checkIfBufferIsEmpty() {
+        boolean isEmpty = false;
+        for (List<Data> buffer: buffers) {
+            if (buffer.isEmpty()) {
+                isEmpty = true;
+            }
+        }
+
+        if (isEmpty) {
+            System.out.printf("Some buffers are empty!\n", isEmpty);
+        }
     }
 
     public void writeRemainingToTree() {

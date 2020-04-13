@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 1000;
+    public static final int BUFFER_SIZE = 500;
     public static final int NUM_BUFFERS = 4;
     public static final int NUM_CRAWLERS = NUM_BUFFERS * 2;    
     public static int runtime;
@@ -57,6 +57,9 @@ public class App implements Callable<Void> {
     public Void call() {
         logger.info("Starting........ =D");
         initialise();
+
+        List<Seed> seeds = getURLSeeds();
+        this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
 
         List<Semaphore> crawlerSemaphores = getCrawlerSemaphores();
         List<Semaphore> builderSemaphores = getBuilderSempahores();
@@ -110,10 +113,7 @@ public class App implements Callable<Void> {
     }
     
     public void initialise() {
-        List<Seed> seeds = getURLSeeds();
-        this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
-
-        Runtime.getRuntime().addShutdownHook(new Cleaner(this.tree, this.buffers, this.queues, this.builders));
+        Runtime.getRuntime().addShutdownHook(new Cleaner(this));
 
         // The following 2 line removes log from the following 2 sources.
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
@@ -219,6 +219,22 @@ public class App implements Callable<Void> {
 
         return result;
     }
+
+    public IndexURLTree getTree() {
+        return this.tree;
+    }
+
+    public List<List<Data>> getBuffers() {
+        return this.buffers; 
+    }
+
+    public List<List<Seed>> getQueues() {
+        return this.queues;
+    }
+
+    public List<IndexBuilder> getBuilders() {
+        return this.builders;
+    }    
 
     // Parse input parameters
     public static void parseAndSetParameters(String[] args) {
