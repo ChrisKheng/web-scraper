@@ -27,12 +27,14 @@ public class StatsWriter extends Thread {
             writer.write(".............Stats............\n");
             
             while (true && !this.isInterrupted()) {
-                try{
-                    // sleeps thread for 1 hour (currently 1 second for testing)
+                try{                    
                     long pastSize = tree.size();
                     long oldQueueUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
                     long oldBufferSize = buffers.stream().mapToInt(buffer -> buffer.size()).sum();
-                    Thread.sleep(1000);//*60*60);
+                    
+                    // sleeps thread for 1 hour 
+                    Thread.sleep(1000 * 60 * 60);
+                    
                     long newSize = tree.size();
                     long newQueueUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
                     long newBufferSize = buffers.stream().mapToInt(buffer -> buffer.size()).sum();
