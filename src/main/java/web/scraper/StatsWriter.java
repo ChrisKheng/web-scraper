@@ -20,7 +20,7 @@ public class StatsWriter extends Thread {
     @Override
     public void run() {
         try {
-            File file = new File("./statistics.txt");
+            File file = new File("./hourly_statistics.txt");
             file.createNewFile();
 
             FileWriter writer = new FileWriter(file);
