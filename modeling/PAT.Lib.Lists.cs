@@ -72,6 +72,12 @@ namespace PAT.Lib
         public bool isListEmpty(int listNumber) {
             return !(lists[listNumber].Any());
         }
+
+        // Returns the size of the specified list
+        // listNumber: the index of the target list.        
+        public int Count(int listNumber) {
+            return lists[listNumber].Count;
+        }
                 
         //---------------------------- For system use ------------------------------
         /// Returns the  string representation of the datatype.
