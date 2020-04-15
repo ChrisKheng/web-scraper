@@ -3,10 +3,11 @@
 #define BUFFER_SIZE 2;
 #define NUM_BUFFERS 2;
 #define NUM_CRAWLERS 4;
+#define NUM_SEEDS 4;
 
 // Model the pool of urls in the internet
 // Each integer in the array refers to the next index of the array that should be visited by the crawler in its next iteration
-var urls = [18, 19, 20, 18, 21, 22, 21, 23, 24, 24, 25, 26, 27, 28, 28, 29, 26, 30, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+var urls = [4, 4, 5, 5, -1, -1];
 
 // queues: queue of each crawler
 var<Lists> queues = new Lists(NUM_CRAWLERS);
@@ -15,9 +16,9 @@ var<Lists> buffers = new Lists(NUM_BUFFERS);
 // Initialise each queue with some seed urls
 // a, b, c ... are just placeholder because of syntax
 var a = queues.Append(0, [0]);
-var b = queues.Append(1, [3]);
-var c = queues.Append(2, [6]);
-var d = queues.Append(3, [9]);
+var b = queues.Append(1, [1]);
+var c = queues.Append(2, [2]);
+var d = queues.Append(3, [3]);
 //var e = queues.Append(4, [12]);
 //var f = queues.Append(5, [15]);
 
@@ -43,10 +44,15 @@ CheckURL(i) = [newURLs[i] != -1]AddToQueue(i) [] [newURLs[i] == -1]BeforeAddToBu
 
 AddToQueue(i) = addToQueue.i{queues.AddToList(i, newURLs[i])} -> BeforeAddToBuffer(i);
 
-BeforeAddToBuffer(i) = [crawlerSem[i/2] > 0]grabCrawlerSem.i{crawlerSem[i/2] = crawlerSem[i/2] - 1} -> AddToBuffer(i);
+BeforeAddToBuffer(i) = [crawlerSem[i/2] > 0]grabCrawlerSem.i{crawlerSem[i/2] = crawlerSem[i/2] - 1} -> GrabBufferMutex(i);
 
-AddToBuffer(i) = [bufferMutex[i/2] > 0]grabBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] - 1} -> addToBuffer.i{buffers.AddToList(i/2, searchURLs[i])} -> releaseBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] + 1}
-	-> AfterAddToBuffer(i);
+GrabBufferMutex(i) = [bufferMutex[i/2] > 0]grabBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] - 1} -> CheckBufferDuplicate(i);
+
+CheckBufferDuplicate(i) = [!buffers.Contains(i/2, searchURLs[i]) && searchURLs[i] >= NUM_SEEDS]AddToBuffer(i) [] [buffers.Contains(i/2, searchURLs[i]) || searchURLs[i] < NUM_SEEDS]ReleaseBufferMutex(i);
+
+AddToBuffer(i) = addToBuffer.i{buffers.AddToList(i/2, searchURLs[i])} -> ReleaseBufferMutex(i);
+
+ReleaseBufferMutex(i) = releaseBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] + 1} -> AfterAddToBuffer(i);
 
 AfterAddToBuffer(i) = releaseBuilderSem.i{builderSem[i/2] = builderSem[i/2] + 1} -> Crawler(i);
 
@@ -74,9 +80,15 @@ CrawlersBuilder3() = |||i:{0..(NUM_BUFFERS - 1)} @ CrawlersBuilder(i);
 
 #define allCrawlersJoined {crawlersJoined == NUM_CRAWLERS};
 #define allBuildersJoined {buildersJoined == NUM_BUFFERS};
+#define containsDuplicates {buffers.ListsContainsDuplicates() == true};
+#define bufferSize {buffers.Count(0) == 1};
+// #define containsURL {buffers.Contains(0, 4)};
 // #define bufferIsFull {buildersJoined == NUM_BUFFERS && buffers.Count(0) > 0};
 
 #assert CrawlersBuilder3() deadlockfree;
 #assert CrawlersBuilder3() reaches allCrawlersJoined;
 #assert CrawlersBuilder3() reaches allBuildersJoined;
+#assert CrawlersBuilder3() reaches containsDuplicates;
+#assert CrawlersBuilder3() reaches bufferSize;
+// #assert CrawlersBuilder3() reaches containsURL;
 // #assert CrawlersBuilder3() reaches bufferIsFull;
