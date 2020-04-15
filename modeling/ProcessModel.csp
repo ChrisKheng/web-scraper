@@ -1,15 +1,18 @@
-﻿#import "PAT.Lib.Lists";
+﻿#import "PAT.Lib.IndexURLTree";
+#import "PAT.Lib.Lists";
 
 #define BUFFER_SIZE 2;
 #define NUM_BUFFERS 2;
 #define NUM_CRAWLERS 4;
 #define NUM_SEEDS 4;
+#define NUM_URLS 6;
 
 // Model the pool of urls in the internet
 // Each integer in the array refers to the next index of the array that should be visited by the crawler in its next iteration
-var urls = [4, 4, 5, 5, -1, -1];
+var urls = [5, 4, 4, 5, -1, -1];
 
 // queues: queue of each crawler
+var tree = new IndexURLTree();
 var<Lists> queues = new Lists(NUM_CRAWLERS);
 var<Lists> buffers = new Lists(NUM_BUFFERS);
 
@@ -19,8 +22,7 @@ var a = queues.Append(0, [0]);
 var b = queues.Append(1, [1]);
 var c = queues.Append(2, [2]);
 var d = queues.Append(3, [3]);
-//var e = queues.Append(4, [12]);
-//var f = queues.Append(5, [15]);
+
 
 // crawlerSem & builderSem: synchronise the access of buffer between crawler and builder who share the same buffer
 // bufferMutex : synchronise the access of buffer between crawlers who share the same buffer
@@ -34,13 +36,27 @@ var newURLs = [-1(NUM_CRAWLERS)];
 var crawlersJoined = 0;
 var buildersJoined = 0;
 
+var fileExist_crawlers = [false(NUM_CRAWLERS)];
+var fileExist_builders = [false(NUM_BUFFERS)];
+var isNewUrlInQueue = [false(NUM_CRAWLERS)]; 
+
+// To test whether a new URL will be added to crawler's queue if tree alr has the new URL
+//var test = tree.CreateFile(4);
+//var test1 = tree.CreateFile(5);
+
+
+// --------------------------------------------------------------------- Crawlers ------------------------------------------------------------------------------------
 // i/2 because we want to map crawler 0, 1 to crawlerSem 0 and so on (i.e. 0, 1 -> 0; 2, 3 -> 1; 4, 5 -> 2)
 // Same goes to bufferMutex
 Crawler(i) = [!queues.isListEmpty(i)]dequeue.i{searchURLs[i] = queues.PollFromList(i)} -> Crawl(i) [] [queues.isListEmpty(i)]CrawlerJoin(i);
 
 Crawl(i) = crawl.i{newURLs[i] = urls[searchURLs[i]]} -> CheckURL(i);
 
-CheckURL(i) = [newURLs[i] != -1]AddToQueue(i) [] [newURLs[i] == -1]BeforeAddToBuffer(i);
+// Check whether the new URL is already in the tree or queue or is a terminating URL (i.e. cannot reach any new URL anymore)
+// Need to assign tree.FileExists(i) to a variable first because of syntax (since tree.FileExists(i) is returning bool instead of i)
+CheckURL(i) = checkTree.i{var x = tree.FileExists(newURLs[i]); fileExist_crawlers[i] = x} -> checkQueue.i{var y = queues.Contains(i, newURLs[i]); isNewUrlInQueue[i] = y}
+	-> ([newURLs[i] != -1 && fileExist_crawlers[i] == false && isNewUrlInQueue[i] == false]AddToQueue(i)
+		[] [newURLs[i] == -1 || fileExist_crawlers[i] == true || isNewUrlInQueue[i] == true]BeforeAddToBuffer(i));
 
 AddToQueue(i) = addToQueue.i{queues.AddToList(i, newURLs[i])} -> BeforeAddToBuffer(i);
 
@@ -58,16 +74,24 @@ AfterAddToBuffer(i) = releaseBuilderSem.i{builderSem[i/2] = builderSem[i/2] + 1}
 
 CrawlerJoin(i) = updateCrawlerJoined.i{crawlersJoined = crawlersJoined + 1} -> Skip;
 
-//Terminate() = [joined == NUM_CRAWLERS]programTerminates -> Skip;
-
 // Simulate 2 crawlers sharing the same buffer
 Crawlers(i) = |||n:{0..1} @ Crawler(n + i*2);
 
-Transfer(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem.i{builderSem[i] = 0} -> removeAllFromBuffer -> releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> Transfer(i);
+
+// --------------------------------------------------------------------- Builders ------------------------------------------------------------------------------------
+
+Transfer(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem.i{builderSem[i] = 0} -> RemoveFromBuffer(i);
+
+RemoveFromBuffer(i) = [!buffers.isListEmpty(i)]removeFromBuffer.i{buffers.PollFromList(i)} -> RemoveFromBuffer(i)
+	[] [buffers.isListEmpty(i)]AfterTransfer(i);
+
+AfterTransfer(i) = releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> Transfer(i);
 
 Builder(i) = Transfer(i) interrupt AllCrawlersJoined(i);
 
-AllCrawlersJoined(i) = [crawlersJoined == NUM_CRAWLERS]updateBuilderJoined.i{buildersJoined = buildersJoined + 1} -> Skip;
+AllCrawlersJoined(i) = [crawlersJoined == NUM_CRAWLERS]BuilderJoin(i);
+
+BuilderJoin(i) = updateBuilderJoined.i{buildersJoined = buildersJoined + 1} -> Skip;
 
 
 // Simulate the interaction between 2 crawlers and 1 builder on 1 buffer
@@ -81,7 +105,7 @@ CrawlersBuilder3() = |||i:{0..(NUM_BUFFERS - 1)} @ CrawlersBuilder(i);
 #define allCrawlersJoined {crawlersJoined == NUM_CRAWLERS};
 #define allBuildersJoined {buildersJoined == NUM_BUFFERS};
 #define containsDuplicates {buffers.ListsContainsDuplicates() == true};
-#define bufferSize {buffers.Count(0) == 1};
+#define bufferSize {buffers.Count(0) == 2};
 // #define containsURL {buffers.Contains(0, 4)};
 // #define bufferIsFull {buildersJoined == NUM_BUFFERS && buffers.Count(0) > 0};
 

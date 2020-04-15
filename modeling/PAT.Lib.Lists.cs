@@ -78,6 +78,29 @@ namespace PAT.Lib
         public int Count(int listNumber) {
             return lists[listNumber].Count;
         }
+
+        // Returns true if the specified list has the url given
+        public bool Contains(int listNumber, int url) {
+            return lists[listNumber].Contains(url);
+        }
+
+        // Returns true if the specified list contains Duplicate
+        public bool ContainsDuplicates(int listNumber) {
+            List<int> list = lists[listNumber];
+
+            return list.Count != list.Distinct().Count();
+        }
+
+        // Returns true if all of the sublists does not contain duplicatess
+        public bool ListsContainsDuplicates() {
+            for (int i = 0; i < lists.Length; i++) {
+                if (ContainsDuplicates(i)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
                 
         //---------------------------- For system use ------------------------------
         /// Returns the  string representation of the datatype.
