@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
-    public static final int BUFFER_SIZE = 500;
+    public static final int BUFFER_SIZE = 1000;
     public static final int NUM_BUFFERS = 4;
     public static final int NUM_CRAWLERS = NUM_BUFFERS * 2;    
     public static int runtime;
@@ -61,13 +61,16 @@ public class App implements Callable<Void> {
         List<Seed> seeds = getURLSeeds();
         this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
 
+
         List<Semaphore> crawlerSemaphores = getCrawlerSemaphores();
         List<Semaphore> builderSemaphores = getBuilderSempahores();
+
 
         // Create all threads
         this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
         this.builders = getBuilders(crawlerSemaphores, builderSemaphores);
         this.statsWriter = new StatsWriter(this.tree, this.queues, this.buffers);
+
 
         // Add all threads
         this.threads.addAll(crawlers);
@@ -133,6 +136,14 @@ public class App implements Callable<Void> {
 
     public List<Crawler> getCrawlers(List<Semaphore> crawlerSemaphores, List<Semaphore> builderSemaphores) {
         List<Crawler> crawlers = new ArrayList<>();
+
+        if (this.queues.size() < NUM_CRAWLERS) {
+            this.logger.warning("Number of queues is lesser than the number of crawlers, padding queues with empty queue");
+            
+            // Pad queues with empty queue
+            int difference = NUM_CRAWLERS - this.queues.size();
+            IntStream.range(0, difference).forEach(i -> this.queues.add(new LinkedList<>()));
+        }
 
         for (int i = 0; i < NUM_CRAWLERS; i++) {
             crawlers.add(new Crawler(this.queues.get(i), this.tree, this.buffers.get(i/2), crawlerSemaphores.get(i/2),
