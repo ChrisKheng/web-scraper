@@ -1,4 +1,4 @@
-﻿#import "PAT.Lib.IndexURLTree";
+#import "PAT.Lib.IndexURLTree";
 #import "PAT.Lib.Lists";
 
 #define BUFFER_SIZE 2;
