@@ -99,9 +99,8 @@ namespace PAT.Lib
                 String result = "";
                 
                 
-                result += "[FileList:[" + String.Join(", ", this.fileList.Select(i => i.ToString()).ToArray()) + "], ";
-                
-                
+                result += "[FileList:[" + String.Join(", ", this.fileList.Select(i => i.ToString()).ToArray()) + "],"
+                    + "[DataList:[" + String.Join(", ", this.dataList.Select(i => i.ToString()).ToArray()) + "]";  
                 
                 return result; 
             }

@@ -101,7 +101,30 @@ namespace PAT.Lib
 
             return false;
         }
-                
+
+        // Returns true if all of the sublists are empty
+        public bool allEmpty() {
+            for (int i = 0; i < lists.Length; i++) {
+                if (!isListEmpty(i)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+               
+        // Poll and return the head of the first non-empty sublists
+        // Return -2 if all sublists are empty
+        public int Poll() {
+            for (int i = 0; i < lists.Length; i++) {
+                if (!isListEmpty(i)) {
+                    return PollFromList(i);
+                }
+            }
+
+            return -2;
+        }
+
         //---------------------------- For system use ------------------------------
         /// Returns the  string representation of the datatype.
         public override string ToString() {

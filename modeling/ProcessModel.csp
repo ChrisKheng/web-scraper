@@ -10,6 +10,7 @@
 // Model the pool of urls in the internet
 // Each integer in the array refers to the next index of the array that should be visited by the crawler in its next iteration
 var urls = [5, 4, 4, 5, -1, -1];
+var result = [5, 4];
 
 // queues: queue of each crawler
 var tree = new IndexURLTree();
@@ -23,22 +24,27 @@ var b = queues.Append(1, [1]);
 var c = queues.Append(2, [2]);
 var d = queues.Append(3, [3]);
 
-
 // crawlerSem & builderSem: synchronise the access of buffer between crawler and builder who share the same buffer
 // bufferMutex : synchronise the access of buffer between crawlers who share the same buffer
 var crawlerSem = [BUFFER_SIZE(NUM_BUFFERS)]; 
 var builderSem = [0(NUM_BUFFERS)]; 
 var bufferMutex = [1(NUM_BUFFERS)];
+var builderFinishIteration = [true(NUM_BUFFERS)];
 
 var searchURLs = [-1(NUM_CRAWLERS)];
 var newURLs = [-1(NUM_CRAWLERS)];
 
-var crawlersJoined = 0;
-var buildersJoined = 0;
-
 var fileExist_crawlers = [false(NUM_CRAWLERS)];
 var fileExist_builders = [false(NUM_BUFFERS)];
 var isNewUrlInQueue = [false(NUM_CRAWLERS)]; 
+
+channel fileLocks[NUM_URLS] 1;
+var urlPolled = [-1(NUM_BUFFERS)];
+var urlPolled_cleaner = -3; // -3 is just a dummy value
+
+var crawlersJoined = 0;
+var buildersJoined = 0;
+
 
 // To test whether a new URL will be added to crawler's queue if tree alr has the new URL
 //var test = tree.CreateFile(4);
@@ -60,17 +66,15 @@ CheckURL(i) = checkTree.i{var x = tree.FileExists(newURLs[i]); fileExist_crawler
 
 AddToQueue(i) = addToQueue.i{queues.AddToList(i, newURLs[i])} -> BeforeAddToBuffer(i);
 
-BeforeAddToBuffer(i) = [crawlerSem[i/2] > 0]grabCrawlerSem.i{crawlerSem[i/2] = crawlerSem[i/2] - 1} -> GrabBufferMutex(i);
+BeforeAddToBuffer(i) = [crawlerSem[i/2] > 0]grabCrawlerSem.i{crawlerSem[i/2] = crawlerSem[i/2] - 1}
+	-> ([bufferMutex[i/2] > 0]grabBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] - 1} -> CheckBufferDuplicate(i));
+	
+CheckBufferDuplicate(i) = [!buffers.Contains(i/2, searchURLs[i]) && searchURLs[i] >= NUM_SEEDS]AddToBuffer(i)
+	[] [buffers.Contains(i/2, searchURLs[i]) || searchURLs[i] < NUM_SEEDS]AfterAddToBuffer(i);
 
-GrabBufferMutex(i) = [bufferMutex[i/2] > 0]grabBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] - 1} -> CheckBufferDuplicate(i);
+AddToBuffer(i) = addToBuffer.i{buffers.AddToList(i/2, searchURLs[i])} -> AfterAddToBuffer(i);
 
-CheckBufferDuplicate(i) = [!buffers.Contains(i/2, searchURLs[i]) && searchURLs[i] >= NUM_SEEDS]AddToBuffer(i) [] [buffers.Contains(i/2, searchURLs[i]) || searchURLs[i] < NUM_SEEDS]ReleaseBufferMutex(i);
-
-AddToBuffer(i) = addToBuffer.i{buffers.AddToList(i/2, searchURLs[i])} -> ReleaseBufferMutex(i);
-
-ReleaseBufferMutex(i) = releaseBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] + 1} -> AfterAddToBuffer(i);
-
-AfterAddToBuffer(i) = releaseBuilderSem.i{builderSem[i/2] = builderSem[i/2] + 1} -> Crawler(i);
+AfterAddToBuffer(i) = releaseBufferMutex.i{bufferMutex[i/2] = bufferMutex[i/2] + 1} -> releaseBuilderSem.i{builderSem[i/2] = builderSem[i/2] + 1} -> Crawler(i);
 
 CrawlerJoin(i) = updateCrawlerJoined.i{crawlersJoined = crawlersJoined + 1} -> Skip;
 
@@ -80,28 +84,51 @@ Crawlers(i) = |||n:{0..1} @ Crawler(n + i*2);
 
 // --------------------------------------------------------------------- Builders ------------------------------------------------------------------------------------
 
-Transfer(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem.i{builderSem[i] = 0} -> RemoveFromBuffer(i);
+Transfer(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem.i{builderSem[i] = 0} -> setNotFinishIteration.i{var done = false; builderFinishIteration[i] = done} -> RemoveFromBuffer(i);
 
-RemoveFromBuffer(i) = [!buffers.isListEmpty(i)]removeFromBuffer.i{buffers.PollFromList(i)} -> RemoveFromBuffer(i)
+RemoveFromBuffer(i) = [!buffers.isListEmpty(i)]removeFromBuffer.i{urlPolled[i] = buffers.PollFromList(i)} -> FirstCheckIfExistInTree(i)
 	[] [buffers.isListEmpty(i)]AfterTransfer(i);
 
-AfterTransfer(i) = releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> Transfer(i);
+FirstCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
+	-> (([fileExist_builders[i] == false]Lock(i)) [] ([fileExist_builders[i] == true]RemoveFromBuffer(i)));
+ 
+Lock(i) = fileLocks[urlPolled[i]]!i -> SecondCheckIfExistInTree(i);
+
+SecondCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
+	-> (([fileExist_builders[i] == false]WriteDataToFile(i)) [] ([fileExist_builders[i] == true]Unlock(i)));
+	
+WriteDataToFile(i) = createFile.i{tree.CreateFile(urlPolled[i])} -> writeData.i{tree.WriteData(urlPolled[i])} -> Unlock(i);
+
+Unlock(i) = fileLocks[urlPolled[i]]?i -> RemoveFromBuffer(i);
+
+AfterTransfer(i) = releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> setFinishIteration.i{var done = true; builderFinishIteration[i] = done} -> Transfer(i);
 
 Builder(i) = Transfer(i) interrupt AllCrawlersJoined(i);
 
-AllCrawlersJoined(i) = [crawlersJoined == NUM_CRAWLERS]BuilderJoin(i);
+// Builders are interrupted if all crawlers have joined and the builder finish its current iteration
+AllCrawlersJoined(i) = [crawlersJoined == NUM_CRAWLERS && builderFinishIteration[i] == true]BuilderJoin(i);
 
 BuilderJoin(i) = updateBuilderJoined.i{buildersJoined = buildersJoined + 1} -> Skip;
 
 
+// ----------------------------------------------------------------------- Cleaner ------------------------------------------------------------------------------------
+
+Cleaner() = [buildersJoined == NUM_BUFFERS && !buffers.allEmpty()]CleanUp() [] [buildersJoined == NUM_BUFFERS && buffers.allEmpty()]doneCleaning -> Skip;
+	
+CleanUp() = poll{urlPolled_cleaner = buffers.Poll()}
+	-> ([!tree.FileExists(urlPolled_cleaner)]createFile{tree.CreateFile(urlPolled_cleaner)} -> writeData{tree.WriteData(urlPolled_cleaner)} -> Cleaner()
+		[] [tree.FileExists(urlPolled_cleaner)]Cleaner());
+
+// ----------------------------------------------------------------------- System ------------------------------------------------------------------------------------
 // Simulate the interaction between 2 crawlers and 1 builder on 1 buffer
 CrawlersBuilder(i) = Crawlers(i) || Builder(i);
 
 // Simulate three concurrent occurences of CrawlersBuilder()
-CrawlersBuilder3() = |||i:{0..(NUM_BUFFERS - 1)} @ CrawlersBuilder(i);
+CrawlersAndBuilders() = |||i:{0..(NUM_BUFFERS - 1)} @ CrawlersBuilder(i);
 
-//System() = CrawlersBuilder(3) ||| Terminate();
+System() = CrawlersAndBuilders() ||| Cleaner();
 
+// --------------------------------------------------------------------- Verification ------------------------------------------------------------------------------------
 #define allCrawlersJoined {crawlersJoined == NUM_CRAWLERS};
 #define allBuildersJoined {buildersJoined == NUM_BUFFERS};
 #define containsDuplicates {buffers.ListsContainsDuplicates() == true};
@@ -109,10 +136,18 @@ CrawlersBuilder3() = |||i:{0..(NUM_BUFFERS - 1)} @ CrawlersBuilder(i);
 // #define containsURL {buffers.Contains(0, 4)};
 // #define bufferIsFull {buildersJoined == NUM_BUFFERS && buffers.Count(0) > 0};
 
-#assert CrawlersBuilder3() deadlockfree;
-#assert CrawlersBuilder3() reaches allCrawlersJoined;
-#assert CrawlersBuilder3() reaches allBuildersJoined;
-#assert CrawlersBuilder3() reaches containsDuplicates;
-#assert CrawlersBuilder3() reaches bufferSize;
-// #assert CrawlersBuilder3() reaches containsURL;
-// #assert CrawlersBuilder3() reaches bufferIsFull;
+#define noDuplicateFileCreation (true == !tree.FileListDuplicateExists());
+#define noDuplicateDataWrite (true == !tree.DataListDuplicateExists());
+#define correct (true == tree.CheckCorrectness(result));
+
+#assert System() deadlockfree;
+#assert System() reaches allCrawlersJoined;
+#assert System() reaches allBuildersJoined;
+#assert System() reaches containsDuplicates;
+#assert System() reaches bufferSize;
+// #assert System() reaches containsURL;
+// #assert System() reaches bufferIsFull;
+
+#assert System |= [] noDuplicateFileCreation;
+#assert System |= [] noDuplicateDataWrite;
+#assert System |= <> correct;
