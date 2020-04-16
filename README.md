@@ -4,3 +4,7 @@ To run the program:
 2. In root directory, run `bash run-jar.sh`.
 * This will build the jar file and run the program as a jar executable.
 * To buld the jar only, run `./gradlew shadowJar`. You can then access the jar file in `build/libs` folder.
+
+To create the jars only (cawler.jar and merger.jar)
+* `bash create_jars.sh`
+* You can then find the created jars in `build/libs` folder.
