@@ -1,4 +1,4 @@
-#import "PAT.Lib.IndexURLTree";
+﻿#import "PAT.Lib.IndexURLTree";
 #import "PAT.Lib.Lists";
 
 #define BUFFER_SIZE 2;
@@ -6,6 +6,7 @@
 #define NUM_CRAWLERS 4;
 #define NUM_SEEDS 4;
 #define NUM_URLS 6;
+#define SHOW_DATARACE false;
 
 // Model the pool of urls in the internet
 // Each integer in the array refers to the next index of the array that should be visited by the crawler in its next iteration
@@ -92,14 +93,18 @@ RemoveFromBuffer(i) = [!buffers.isListEmpty(i)]removeFromBuffer.i{urlPolled[i] =
 FirstCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
 	-> (([fileExist_builders[i] == false]Lock(i)) [] ([fileExist_builders[i] == true]RemoveFromBuffer(i)));
  
-Lock(i) = fileLocks[urlPolled[i]]!i -> SecondCheckIfExistInTree(i);
+Lock(i) = LockFile(i);SecondCheckIfExistInTree(i);
+
+LockFile(i) = if (!SHOW_DATARACE) {fileLocks[urlPolled[i]]!i -> Skip};
 
 SecondCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
 	-> (([fileExist_builders[i] == false]WriteDataToFile(i)) [] ([fileExist_builders[i] == true]Unlock(i)));
 	
 WriteDataToFile(i) = createFile.i{tree.CreateFile(urlPolled[i])} -> writeData.i{tree.WriteData(urlPolled[i])} -> Unlock(i);
 
-Unlock(i) = fileLocks[urlPolled[i]]?i -> RemoveFromBuffer(i);
+Unlock(i) = UnlockFile(i);RemoveFromBuffer(i);
+
+UnlockFile(i) = if (!SHOW_DATARACE) {fileLocks[urlPolled[i]]?i -> Skip};
 
 AfterTransfer(i) = releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> setFinishIteration.i{var done = true; builderFinishIteration[i] = done} -> Transfer(i);
 
