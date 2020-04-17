@@ -26,6 +26,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class Crawler extends CustomThread {
     // Not thread safe so every crawler needs to have its own client.
     // seeds is the portion of the original urls assigned to a crawler thread.
+    private static final Object lock1 = new Object();
     private final Pattern rootPattern = Pattern.compile("[a-z]+:\\/\\/(?:\\w+\\.?)*\\/");
     private WebClient client;
     private Logger logger;
@@ -130,7 +131,7 @@ public class Crawler extends CustomThread {
     private void handle404Issue(String searchUrl) {
         logger.info(getFormattedMessage("Now in handle404................"));
 
-        synchronized (Crawler.class) {
+        synchronized (lock1) {
             Matcher m = rootPattern.matcher(searchUrl);
 
             // If the url does not match the rootPattern
