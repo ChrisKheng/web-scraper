@@ -144,7 +144,7 @@ namespace PAT.Lib
                 String result = "";
                 
                 foreach (List<int> list in this.lists) {
-                    result += "[" + String.Join(", ", list) + "], ";
+                    result += "[" + String.Join(", ", list.Select(i => i.ToString()).ToArray()) + "], ";
                 }
                 
                if (result.Length > 0) {
