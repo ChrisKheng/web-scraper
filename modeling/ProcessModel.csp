@@ -87,24 +87,32 @@ Crawlers(i) = |||n:{0..1} @ Crawler(n + i*2);
 
 Transfer(i) = [builderSem[i] == BUFFER_SIZE]grabBuilderSem.i{builderSem[i] = 0} -> setNotFinishIteration.i{var done = false; builderFinishIteration[i] = done} -> RemoveFromBuffer(i);
 
+// IBT Modelling, removing url from buffer, and pass url to tree.
 RemoveFromBuffer(i) = [!buffers.isListEmpty(i)]removeFromBuffer.i{urlPolled[i] = buffers.PollFromList(i)} -> FirstCheckIfExistInTree(i)
 	[] [buffers.isListEmpty(i)]AfterTransfer(i);
 
+// Start of IUT Modelling
+// Check if url exist in tree before acquiring lock for file.
 FirstCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
 	-> (([fileExist_builders[i] == false]Lock(i)) [] ([fileExist_builders[i] == true]RemoveFromBuffer(i)));
- 
+
+// Acquire a lock for the url, and lock it. Locks are unique for each url. This makes writing data for a specific url mutually exclusive. 
 Lock(i) = LockFile(i);SecondCheckIfExistInTree(i);
 
 LockFile(i) = if (!SHOW_DATARACE) {fileLocks[urlPolled[i]]!i -> Skip};
 
+// Second check if url exist in tree to cover the case where url was written into tree when acquiring the lock. 
 SecondCheckIfExistInTree(i) = check.i{var exist = tree.FileExists(urlPolled[i]); fileExist_builders[i] = exist}
 	-> (([fileExist_builders[i] == false]WriteDataToFile(i)) [] ([fileExist_builders[i] == true]Unlock(i)));
-	
+
+// Create file and write html content to file.
 WriteDataToFile(i) = createFile.i{tree.CreateFile(urlPolled[i])} -> writeData.i{tree.WriteData(urlPolled[i])} -> Unlock(i);
 
+// Unlock the lock to allow other threads waiting on this lock to proceed.
 Unlock(i) = UnlockFile(i);RemoveFromBuffer(i);
 
 UnlockFile(i) = if (!SHOW_DATARACE) {fileLocks[urlPolled[i]]?i -> Skip};
+// End of IUT Modelling
 
 AfterTransfer(i) = releaseCralwerSem.i{crawlerSem[i] = BUFFER_SIZE} -> setFinishIteration.i{var done = true; builderFinishIteration[i] = done} -> Transfer(i);
 
