@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class App implements Callable<Void> {
     // Buffer size is used to determine the number of permits in each crawler semaphore.
     public static final int BUFFER_SIZE = 1000;
-    public static final int NUM_BUFFERS = 4;
+    public static final int NUM_BUFFERS = 6;
     public static final int NUM_CRAWLERS = NUM_BUFFERS * 2;    
     public static int runtime;
     public static int numPagesToStore;
@@ -59,43 +59,50 @@ public class App implements Callable<Void> {
         initialise();
 
         List<Seed> seeds = getURLSeeds();
-        this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
+        // this.queues.addAll(splitList(seeds, NUM_CRAWLERS));
 
+        // List<Semaphore> crawlerSemaphores = getCrawlerSemaphores();
+        // List<Semaphore> builderSemaphores = getBuilderSempahores();
 
-        List<Semaphore> crawlerSemaphores = getCrawlerSemaphores();
-        List<Semaphore> builderSemaphores = getBuilderSempahores();
+        // // Create all threads
+        // this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
+        // this.builders = getBuilders(crawlerSemaphores, builderSemaphores);
+        Semaphore crawlerSemaphore = new Semaphore(BUFFER_SIZE);
+        Semaphore builderSemaphore = new Semaphore(0);
 
-
-        // Create all threads
-        this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
-        this.builders = getBuilders(crawlerSemaphores, builderSemaphores);
+        Crawler crawler = new Crawler(seeds, this.tree, this.buffers.get(0), crawlerSemaphore, builderSemaphore);
+        IndexBuilder builder = new IndexBuilder(this.tree, this.buffers.get(0), crawlerSemaphore, builderSemaphore);
         this.statsWriter = new StatsWriter(this.tree, this.queues, this.buffers);
 
-
-        // Add all threads
-        this.threads.addAll(crawlers);
-        this.threads.addAll(builders);
+        // // Add all threads
+        // this.threads.addAll(crawlers);
+        // this.threads.addAll(builders);
+        this.threads.add(crawler);
+        this.threads.add(builder);
         this.threads.add(statsWriter);
 
         // Start all threads
         this.threads.forEach(thread -> thread.start());
-
         
         try {
-            for (int i = 0; i < NUM_CRAWLERS; i++) {
-                Crawler crawler = this.crawlers.get(i);
-                crawler.join();
-                logger.info(String.format("Crawler %d joined...............................", crawler.getId()));
-            }
+            // for (int i = 0; i < NUM_CRAWLERS; i++) {
+            //     Crawler crawler = this.crawlers.get(i);
+            //     crawler.join();
+            //     logger.info(String.format("Crawler %d joined...............................", crawler.getId()));
+            // }
 
 
-            this.builders.forEach(builder -> builder.interrupt());
+            // this.builders.forEach(builder -> builder.interrupt());
 
-            for (int i = 0; i < NUM_BUFFERS; i++) {
-                IndexBuilder builder = this.builders.get(i);
-                builder.join();
-                logger.info(String.format("Builder %d joined...............................", builder.getId()));
-            }
+            // for (int i = 0; i < NUM_BUFFERS; i++) {
+            //     IndexBuilder builder = this.builders.get(i);
+            //     builder.join();
+            //     logger.info(String.format("Builder %d joined...............................", builder.getId()));
+            // }
+
+            crawler.join();
+            builder.interrupt();
+            builder.join();
 
             this.statsWriter.interrupt();
             this.statsWriter.join();
