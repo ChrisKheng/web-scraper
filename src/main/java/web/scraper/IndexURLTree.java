@@ -79,13 +79,13 @@ public class IndexURLTree {
 
         try {
             f.getParentFile().mkdirs();
-            lock.writeLock().lock();
+//            lock.writeLock().lock();
             if (!srcFile.exists()) {
 //            if (f.createNewFile()) {
                 // file did not exist, file created
                 writeDataToFile(f, d);
-                lock.writeLock().unlock();
-                deleteLock(lockKey);
+//                lock.writeLock().unlock();
+//                deleteLock(lockKey);
                 synchronized (this) {
                     size++;
                 }
@@ -162,6 +162,11 @@ public class IndexURLTree {
     private void writeDataToFile(File f, Data d) throws IOException {
         // Create content.html
         if (size < URL_LIMIT) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             // Create source.txt
             File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
 //        sourceF.createNewFile();
