@@ -168,14 +168,15 @@ public class IndexURLTree {
             FileWriter fw = new FileWriter(sourceF);
             if(d.isNewUrlDead()) {
                 fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + "dead-url" + "\n");
+                fw.close();
             } else {
                 fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + f.getPath() + "\n");
-            }
-            fw.close();
+                fw.close();
 
-            fw = new FileWriter(f);
-            fw.write(d.getDocument());
-            fw.close();
+                fw = new FileWriter(f);
+                fw.write(d.getDocument());
+                fw.close();
+            }
         } else {
             // Create source.txt
             File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
