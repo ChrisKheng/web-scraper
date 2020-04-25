@@ -67,6 +67,8 @@ public class App implements Callable<Void> {
         // // Create all threads
         // this.crawlers = getCrawlers(crawlerSemaphores, builderSemaphores);
         // this.builders = getBuilders(crawlerSemaphores, builderSemaphores);
+        this.queues.add(seeds);
+
         Semaphore crawlerSemaphore = new Semaphore(BUFFER_SIZE);
         Semaphore builderSemaphore = new Semaphore(0);
 
@@ -79,6 +81,8 @@ public class App implements Callable<Void> {
         // this.threads.addAll(builders);
         this.threads.add(crawler);
         this.threads.add(builder);
+        this.builders = new ArrayList<>();
+        this.builders.add(builder);
         this.threads.add(statsWriter);
 
         // Start all threads
