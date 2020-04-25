@@ -181,7 +181,7 @@ public class IndexURLTree {
             }
             fw.close();
 
-            fw = new FileWriter(f);
+            fw = new FileWriter(f, true);
             fw.write(d.getDocument());
             fw.close();
         } else {
