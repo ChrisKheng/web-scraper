@@ -84,12 +84,25 @@ public class IndexURLTree {
 //            if (f.createNewFile()) {
                 // file did not exist, file created
 
-                //SLEEP TO TRIGGER DATA RACE
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                // 2 Threads writing to same file must be at this point at the same time to pass.
+                if(lock.writeLock().tryLock()) {
+                    try {
+                        // Block yourself if u can get lock
+                        synchronized (lock) {
+                            // Lock is reentrant lock, therefore wait used here instead.
+                            lock.wait();
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    // Unblock other thread if you are unable to get lock
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
                 }
+
+
 
                 writeDataToFile(f, d);
 //                lock.writeLock().unlock();
@@ -181,7 +194,7 @@ public class IndexURLTree {
             }
             fw.close();
 
-            fw = new FileWriter(f);
+            fw = new FileWriter(f, true);
             fw.write(d.getDocument());
             fw.close();
         } else {
