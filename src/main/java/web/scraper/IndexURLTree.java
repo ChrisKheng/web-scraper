@@ -91,6 +91,7 @@ public class IndexURLTree {
                         synchronized (lock) {
                             // Lock is reentrant lock, therefore wait used here instead.
                             lock.wait();
+                            lock.writeLock().unlock();
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -106,7 +107,7 @@ public class IndexURLTree {
 
                 writeDataToFile(f, d);
 //                lock.writeLock().unlock();
-//                deleteLock(lockKey);
+                deleteLock(lockKey);
                 synchronized (this) {
                     size++;
                 }
