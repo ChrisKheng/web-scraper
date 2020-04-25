@@ -93,14 +93,14 @@ public class IndexURLTree {
 
                 writeDataToFile(f, d);
 //                lock.writeLock().unlock();
-//                deleteLock(lockKey);
+                deleteLock(lockKey);
                 synchronized (this) {
                     size++;
                 }
                 return true;
             } else {
                 // file did exist, file did not create
-                lock.writeLock().unlock();
+//                lock.writeLock().unlock();
                 deleteLock(lockKey);
             }
         } catch (IOException e) {
