@@ -29,6 +29,7 @@ public class IndexURLTree {
     public String HTML_FILENAME = "content.html";
     public String SOURCE_FILENAME = "source.txt";
     public String RESULT_FILENAME;
+    public String FILE_SEPARATOR = System.getProperty("file.separator");
 
     private int URL_LIMIT;
     public ConcurrentHashMap<String, CustomLock> lockMap = new ConcurrentHashMap<>();
@@ -62,7 +63,7 @@ public class IndexURLTree {
         //TODO: Add URL and Content passed to this method to the tree
         String path = getPathFromUrl(url);
         File f = new File(path);
-        File srcFile = new File(f.getParent().concat("/" + SOURCE_FILENAME));
+        File srcFile = new File(f.getParent().concat(FILE_SEPARATOR + SOURCE_FILENAME));
         if (srcFile.exists()) {
             // file already exist
             return false;
@@ -119,7 +120,6 @@ public class IndexURLTree {
      * @return true if url exist, otherwise false
      */
     public boolean isDuplicate(String url) {
-        //TODO: Check if URL is already stored
         String path = getPathFromUrl(url);
 
         File f = new File(path);
@@ -136,7 +136,7 @@ public class IndexURLTree {
     public void writeResult() {
         try {
 
-            File file = new File("./" + RESULT_FILENAME);
+            File file = new File("." + FILE_SEPARATOR + RESULT_FILENAME);
             file.createNewFile();
             FileWriter fw = new FileWriter(file);
             BufferedWriter writer = new BufferedWriter(fw);
@@ -160,19 +160,32 @@ public class IndexURLTree {
     }
 
     private void writeDataToFile(File f, Data d) throws IOException {
-        // Create source.txt
-        File sourceF = new File(f.getParentFile().getPath() + "/" + SOURCE_FILENAME);
-//        sourceF.createNewFile();
-        FileWriter fw = new FileWriter(sourceF, true);
-        fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + "\n");
-        fw.close();
-
         // Create content.html
         if (size < URL_LIMIT) {
+            // Create source.txt
+            File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
+//        sourceF.createNewFile();
+            FileWriter fw = new FileWriter(sourceF, true);
+            if(d.isNewUrlDead()) {
+                fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + "dead-url" + "\n");
+            } else {
+                fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + f.getPath() + "\n");
+            }
+            fw.close();
+
             fw = new FileWriter(f);
             fw.write(d.getDocument());
             fw.close();
+        } else {
+            // Create source.txt
+            File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
+            //        sourceF.createNewFile();
+            FileWriter fw = new FileWriter(sourceF, true);
+
+            fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + "ignored" + "\n");
+            fw.close();
         }
+
     }
 
     /**
@@ -188,25 +201,25 @@ public class IndexURLTree {
         String[] directory = breakdown.get(2);
 
         StringBuilder builder = new StringBuilder();
-        builder.append(ROOT_DIRECTORY + "/");
+        builder.append(ROOT_DIRECTORY + FILE_SEPARATOR);
         for (int i = 0; i < protocol.length; i++) {
-            builder.append("pr-" + protocol[i] + "/");
+            builder.append("pr-" + protocol[i] + FILE_SEPARATOR);
         }
         for (int i = 0; i < domain.length; i++) {
-            builder.append("do-" + domain[i] + "/");
+            builder.append("do-" + domain[i] + FILE_SEPARATOR);
         }
         for (int i = 0; i < directory.length; i++) {
             if (directory[i].length() >= 250) {
                 String s = "dr-" + directory[i];
                 while (s.length() > 250) {
-                    builder.append(s.substring(0, 250) + "/");
+                    builder.append(s.substring(0, 250) + FILE_SEPARATOR);
                     s = "ex-" + s.substring(250);
                 }
                 if (s.length() != 0) {
-                    builder.append(s + "/");
+                    builder.append(s + FILE_SEPARATOR);
                 }
             } else {
-                builder.append("dr-" + directory[i] + "/");
+                builder.append("dr-" + directory[i] + FILE_SEPARATOR);
             }
         }
         builder.append(HTML_FILENAME);
