@@ -50,57 +50,57 @@ public class IndexURLTreeTest {
         // ########## The following 3 cases shouldn't be possible. But included just in case. ######
         url = "http";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-http/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + IUT.FILE_SEPARATOR +"pr-http" + IUT.FILE_SEPARATOR + IUT.HTML_FILENAME);
 
         url = "https";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-https/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + IUT.FILE_SEPARATOR+"pr-https"+IUT.FILE_SEPARATOR + IUT.HTML_FILENAME);
 
         url = "https:// ";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-https/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + IUT.FILE_SEPARATOR+"pr-https"+IUT.FILE_SEPARATOR + IUT.HTML_FILENAME);
 
         // #################### urls with protocol and domain ######################################
 
         url = "http://abc";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-http/do-abc/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         // url with slash but no directory
         url = "http://abc/";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-http/do-abc/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         // url with extra space at the end
         url = "http://abc/ ";
         path = IUT.getPathFromUrl(url);
-        assertEquals(path, IUT.ROOT_DIRECTORY + "/pr-http/do-abc/" + IUT.HTML_FILENAME);
+        assertEquals(path, IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         url = "http://abc.com.sg";
         path = IUT.getPathFromUrl(url);
         assertEquals(path,
-            IUT.ROOT_DIRECTORY + "/pr-http/do-abc/do-com/do-sg/" + IUT.HTML_FILENAME);
+            IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%sdo-com%sdo-sg%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         // #################### urls with protocol, domain and directory ##########################
         url = "http://abc.com/test-directory";
         path = IUT.getPathFromUrl(url);
         assertEquals(path,
-            IUT.ROOT_DIRECTORY + "/pr-http/do-abc/do-com/dr-test-directory/" + IUT.HTML_FILENAME);
+            IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%sdo-com%sdr-test-directory%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         url = "http://abc.com/test-directory/";
         path = IUT.getPathFromUrl(url);
         assertEquals(path,
-            IUT.ROOT_DIRECTORY + "/pr-http/do-abc/do-com/dr-test-directory/" + IUT.HTML_FILENAME);
+            IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%sdo-com%sdr-test-directory%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         url = "http://abc.com/test-directory/ ";
         path = IUT.getPathFromUrl(url);
         assertEquals(path,
-            IUT.ROOT_DIRECTORY + "/pr-http/do-abc/do-com/dr-test-directory/" + IUT.HTML_FILENAME);
+            IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%sdo-com%sdr-test-directory%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR) + IUT.HTML_FILENAME);
 
         url = "http://abc.com/test-directory/deep/deeper";
         path = IUT.getPathFromUrl(url);
         assertEquals(path,
-            IUT.ROOT_DIRECTORY + "/pr-http/do-abc/do-com/dr-test-directory/dr-deep/dr-deeper/"
+            IUT.ROOT_DIRECTORY + String.format("%spr-http%sdo-abc%sdo-com%sdr-test-directory%sdr-deep%sdr-deeper%s",IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR,IUT.FILE_SEPARATOR)
                 + IUT.HTML_FILENAME);
     }
 
@@ -207,20 +207,10 @@ public class IndexURLTreeTest {
             Data d = new Data("http://www.source2.com", url, content);
             IUT.addURLandContent(d);
 
-            // TEST 2
+            // TEST 2 dead url
             url = "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2";
             path = IUT.getPathFromUrl(url);
-            content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
-                + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
-                + "<html>\n"
-                + "<head>\n"
-                + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-                + "<title>$title</title>\n"
-                + "</head>\n"
-                + "<body>$body\n"
-                + "</body>\n"
-                + "</html>";
-            d = new Data("http://test.com", url, content);
+            d = new Data("http://test.com", url);
             IUT.addURLandContent(d);
 
             // TEST 3
@@ -244,9 +234,9 @@ public class IndexURLTreeTest {
             path = "./" + IUT.RESULT_FILENAME;
             String fContent = new String(Files.readAllBytes(Paths.get(path)));
             String expectedContent =
-                "http://www.jetbrains.com.sg/test3/multiple/dir --> http://test.commm\n"
-                    + "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2 --> http://test.com\n"
-                    + "https://www.jetbrains.com --> http://www.source2.com\n";
+                "http://www.jetbrains.com.sg/test3/multiple/dir --> http://test.commm : test_data\\pr-http\\do-www\\do-jetbrains\\do-com\\do-sg\\dr-test3\\dr-multiple\\dr-dir\\content.html\n"
+                    + "https://www.jetbrains.com/test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2test2 --> http://test.com : dead-url\n"
+                    + "https://www.jetbrains.com --> http://www.source2.com : test_data\\pr-https\\do-www\\do-jetbrains\\do-com\\content.html\n";
             assertEquals(expectedContent, fContent);
 
 
@@ -371,6 +361,88 @@ public class IndexURLTreeTest {
 
     @Test
     /**
+     * Test if correctness is maintained with 1 buffer
+     * execute at the same time.
+     */
+    public void testCorrectness() {
+        int numBuffers = 1;
+        List<List<Data>> buffers = new LinkedList<>();
+        List<IndexBuilderStub> indexBuilders = new LinkedList<>();
+        for (int i = 0; i < numBuffers; i++) {
+            LinkedList<Data> buffer = new LinkedList();
+            buffers.add(buffer);
+            indexBuilders.add(new IndexBuilderStub(IUT, buffer));
+        }
+
+        String url = "https://www.jetbrains.com/test2/sample";
+        String path = IUT.getPathFromUrl(url);
+        String content = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \n"
+            + "\"http://www.w3.org/TR/html4/loose.dtd\">\n"
+            + "<html>\n"
+            + "<head>\n"
+            + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
+            + "<title>$title</title>\n"
+            + "</head>\n"
+            + "<body>$body\n"
+            + "</body>\n"
+            + "</html>";
+
+        int SIZE = 1500;
+        for (int i = 0; i < SIZE; i++) {
+            Data d = new Data("http://www.source.com", url + i, content);
+            for (int j = 0; j < numBuffers; j++) {
+                buffers.get(j).add(d);
+            }
+        }
+
+        final long startTime = System.currentTimeMillis();
+
+        for (int i = 0; i < numBuffers; i++) {
+            indexBuilders.get(i).start();
+        }
+        try {
+            for (int i = 0; i < numBuffers; i++) {
+                indexBuilders.get(i).join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        final long endTime = System.currentTimeMillis();
+        System.out
+            .println("Total execution time: " + ((endTime - startTime) / 1000.0) + " seconds");
+
+        try {
+            System.out.println(IUT.size());
+            // Ensure size of IUT is correct
+            assertEquals(IUT.size(), SIZE);
+
+            // Ensure all written contents are correct.
+            String srcPath;
+            for (int i = 0; i < SIZE; i++) {
+                path = IUT.getPathFromUrl(url + i);
+
+                srcPath = Paths.get(path).getParent().toString() + "/" + IUT.SOURCE_FILENAME;
+                String srcContent = new String(Files.readAllBytes(Paths.get(srcPath)));
+                if (i < 1000) {
+                    String fContent = new String(Files.readAllBytes(Paths.get(path)));
+                    assertEquals(srcContent,
+                        url + i + " --> http://www.source.com : " + path + "\n");
+                    assertEquals(fContent, content);
+                }
+                else {
+                    assertEquals(srcContent,
+                        url + i + " --> http://www.source.com : " + "ignored" + "\n");
+                }
+            }
+            System.out.println(IUT.lockMap.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    /**
      * Test if correctness is maintained when multiple IndexBuilder with identical buffers
      * execute at the same time.
      */
@@ -436,7 +508,7 @@ public class IndexURLTreeTest {
                 srcPath = Paths.get(path).getParent().toString() + "/" + IUT.SOURCE_FILENAME;
                 String srcContent = new String(Files.readAllBytes(Paths.get(srcPath)));
 
-                assertEquals(srcContent, url + i + " --> http://www.source.com\n");
+                assertEquals(srcContent, url + i + " --> http://www.source.com : " + path + "\n");
                 assertEquals(fContent, content);
             }
             System.out.println(IUT.lockMap.size());
@@ -506,7 +578,7 @@ public class IndexURLTreeTest {
                 srcPath = Paths.get(path).getParent().toString() + "/" + IUT.SOURCE_FILENAME;
                 String srcContent = new String(Files.readAllBytes(Paths.get(srcPath)));
 
-                assertEquals(srcContent, url + i + " --> http://www.source1.com\n");
+                assertEquals(srcContent, url + i + " --> http://www.source1.com : " + path + "\n");
                 assertEquals(fContent, content);
             }
         } catch (Exception e) {
