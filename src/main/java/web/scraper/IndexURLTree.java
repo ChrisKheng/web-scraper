@@ -114,7 +114,7 @@ public class IndexURLTree {
                 return true;
             } else {
                 // file did exist, file did not create
-                lock.writeLock().unlock();
+//                lock.writeLock().unlock();
                 deleteLock(lockKey);
             }
         } catch (IOException e) {
