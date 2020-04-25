@@ -165,7 +165,7 @@ public class IndexURLTree {
             // Create source.txt
             File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
 //        sourceF.createNewFile();
-            FileWriter fw = new FileWriter(sourceF, true);
+            FileWriter fw = new FileWriter(sourceF);
             if(d.isNewUrlDead()) {
                 fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + "dead-url" + "\n");
             } else {
@@ -180,7 +180,7 @@ public class IndexURLTree {
             // Create source.txt
             File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
             //        sourceF.createNewFile();
-            FileWriter fw = new FileWriter(sourceF, true);
+            FileWriter fw = new FileWriter(sourceF);
 
             fw.write(d.getNewUrl() + " --> " + d.getSourceUrl() + " : " + "ignored" + "\n");
             fw.close();
