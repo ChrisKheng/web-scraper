@@ -83,6 +83,14 @@ public class IndexURLTree {
             if (!srcFile.exists()) {
 //            if (f.createNewFile()) {
                 // file did not exist, file created
+
+                //SLEEP TO TRIGGER DATA RACE
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 writeDataToFile(f, d);
 //                lock.writeLock().unlock();
 //                deleteLock(lockKey);
@@ -162,11 +170,6 @@ public class IndexURLTree {
     private void writeDataToFile(File f, Data d) throws IOException {
         // Create content.html
         if (size < URL_LIMIT) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             // Create source.txt
             File sourceF = new File(f.getParentFile().getPath() + FILE_SEPARATOR + SOURCE_FILENAME);
 //        sourceF.createNewFile();
