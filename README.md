@@ -1,4 +1,8 @@
-# ReadMe
+# README
+## Notes
+The **total number of new URLs found (crawled or not crawled)** are equal to the total number of URLs in `res.txt` **and** `res2.txt`, which is equivalent to the total number of lines in `res.txt` and `res2.txt`.
+
+## Execution
 To run the program:
 1. Place `seed.txt` into `build/libs` folder.
 2. In root directory, run `bash run-jar.sh`.
