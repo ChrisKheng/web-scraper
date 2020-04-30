@@ -12,21 +12,23 @@ public class Cleaner extends Thread {
     private List<List<Data>> buffers;
     private List<List<Seed>> queues;
     private List<IndexBuilder> builders;
-    private TreeSet<String> set;
+    private TreeSet<Seed> set;
     private long count;
 
     public Cleaner(App app) {
         this.app = app;
         this.count = 0;
-        this.set = new TreeSet<>();
+        // Add custom comparator to the set which compares the new urls of two seeds
+        // instead
+        this.set = new TreeSet<>((seed1, seed2) -> seed1.getNewUrl().compareTo(seed2.getNewUrl()));
     }
 
     public void run() {
         System.out.println("\nStart cleaning............................");
         initialise();
-        
+
         checkIfBufferIsEmpty();
-        writeRemainingToTree();        
+        writeRemainingToTree();
         this.tree.writeResult();
         writeFromQueueToDisk();
         writeStatsToDisk();
@@ -43,7 +45,7 @@ public class Cleaner extends Thread {
 
     public void checkIfBufferIsEmpty() {
         boolean isEmpty = false;
-        for (List<Data> buffer: buffers) {
+        for (List<Data> buffer : buffers) {
             if (buffer.isEmpty()) {
                 isEmpty = true;
             }
@@ -70,11 +72,10 @@ public class Cleaner extends Thread {
 
     public void writeFromQueueToDisk() {
         try {
-             // Duplicate checking
-            queues.forEach(queue -> 
-                queue.forEach(seed -> {
-                    this.set.add(seed.getNewUrl());
-                }));
+            // Duplicate checking (for new URL)
+            queues.forEach(queue -> queue.forEach(seed -> {
+                this.set.add(seed);
+            }));
 
             File file = new File("./res2.txt");
             file.createNewFile();
@@ -82,9 +83,8 @@ public class Cleaner extends Thread {
             writer.write("................. Remaining new URLs in queues that has not been crawled ............\n");
             writer.write(String.format("Total size: %d\n", this.set.size()));
 
-            for (String url : this.set) {
-                writer.write(url);
-                writer.write('\n');
+            for (Seed seed : this.set) {
+                writer.write(seed.getNewUrl() + " --> " + seed.getSourceUrl() + "\n");
             }
 
             writer.close();
@@ -100,7 +100,7 @@ public class Cleaner extends Thread {
             FileWriter writer = new FileWriter(file);
 
             long numUrls = queues.stream().mapToInt(queue -> queue.size()).sum();
-            this.count += builders.stream().mapToLong(builder -> builder.getCount()).sum();            
+            this.count += builders.stream().mapToLong(builder -> builder.getCount()).sum();
 
             writer.write("\nFinal statistics:\n");
             // TODO: add findURLs() method to calculate no. of URLs in IUT
