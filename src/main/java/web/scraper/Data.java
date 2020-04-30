@@ -16,8 +16,8 @@ class Data {
     }
 
     private Data(String sourceUrl, String newUrl, String document, boolean isNewUrlDead) {
-        this.sourceUrl = sourceUrl.replace("\n", "\\n").replace("\r", "\\r");
-        this.newUrl = newUrl.replace("\n", "\\n").replace("\r", "\\r");
+        this.sourceUrl = sourceUrl;
+        this.newUrl = newUrl;
         this.document = document;
         this.isNewUrlDead = isNewUrlDead;
     }
