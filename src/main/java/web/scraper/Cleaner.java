@@ -29,7 +29,7 @@ public class Cleaner extends Thread {
 
         checkIfBufferIsEmpty();
         writeRemainingToTree();
-        this.tree.writeResult();
+        writeResult();
         writeFromQueueToDisk();
         writeStatsToDisk();
 
@@ -67,6 +67,14 @@ public class Cleaner extends Thread {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public void writeResult() {
+        try {
+            this.tree.writeResult();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
