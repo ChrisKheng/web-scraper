@@ -30,8 +30,6 @@ public class IndexBuilder extends CustomThread {
             try {
                 builderSempahore.acquire(App.BUFFER_SIZE);
                 logger.info(getFormattedMessage("Entering critical section............."));
-                logger.info(getFormattedMessage(
-                    String.format("buffer size is %d .........", buffer.size())));
 
                 while (!buffer.isEmpty()) {
                     Data data = buffer.remove(0);
@@ -52,8 +50,8 @@ public class IndexBuilder extends CustomThread {
             this.count++;
         }
 
-        logger.info(getFormattedMessage("write...................."));
-        logger.info(data.getNewUrl());
+        // logger.info(getFormattedMessage("write...................."));
+        // logger.info(data.getNewUrl());
     }
 
     public long getCount() {

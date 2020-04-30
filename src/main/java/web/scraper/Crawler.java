@@ -79,7 +79,7 @@ public class Crawler extends CustomThread {
                     // Attempt to visit the url
                     HtmlPage page = client.getPage(searchUrl);
                     List<String> urls = getUrls(page);
-                    logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
+                    // logger.info(getFormattedMessage(String.format("found %d urls", urls.size())));
                     processUrls(searchUrl, urls);
 
                     Data newData = new Data(sourceUrl, searchUrl, page.asXml());
@@ -92,7 +92,7 @@ public class Crawler extends CustomThread {
                     Data newData = new Data(sourceUrl, searchUrl);
                     addToBuffer(newData);
 
-                    logger.info(getFormattedMessage("Going to handle 404........."));
+                    // logger.info(getFormattedMessage("Going to handle 404........."));
                     handle404Issue(searchUrl);
                 }
            } catch (UnknownHostException | ConnectException | SSLHandshakeException | SSLProtocolException
@@ -100,7 +100,7 @@ public class Crawler extends CustomThread {
                 logger.warning(getFormattedMessage(e.getMessage()));
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                logger.info(getFormattedMessage("Exiting......................."));
+                logger.info(getFormattedMessage("Interrrupted......................."));
                 break;
             } catch (Exception e) {
                 logger.warning(getFormattedMessage(String.format("exception: url %s", searchUrl)));
@@ -119,56 +119,56 @@ public class Crawler extends CustomThread {
         }        
 
         crawlerSemaphore.acquire();
-        logger.info(getFormattedMessage(String.format("entering critical section.............")));
+        // logger.info(getFormattedMessage(String.format("entering critical section.............")));
 
         buffer.add(newData);
 
         builderSemaphore.release();
-        logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
+        // logger.info(getFormattedMessage(String.format("Leaving critical section.............")));
     }
 
     // Extract the root of the url and add it to the queue instead
     private void handle404Issue(String searchUrl) {
-        logger.info(getFormattedMessage("Now in handle404................"));
+        // logger.info(getFormattedMessage("Now in handle404................"));
 
         synchronized (lock1) {
             Matcher m = rootPattern.matcher(searchUrl);
 
             // If the url does not match the rootPattern
             if (!m.find()) {
-                logger.info("Doesn't match url pattern");
+                // logger.info("Doesn't match url pattern");
                 return;
             }
 
-            logger.info(getFormattedMessage("After matching................"));
+            // logger.info(getFormattedMessage("After matching................"));
 
             String rootUrl = m.group(0);
 
             // To prevent using an invalid 404 url again
             if (rootUrl.equals(searchUrl)) {
-                logger.info(getFormattedMessage("Skipping as rootUrl is the same as original"));
+                // logger.info(getFormattedMessage("Skipping as rootUrl is the same as original"));
                 return;
             }
 
             Seed newSeed = new Seed(searchUrl, rootUrl);
 
-            logger.info("Entering if else statement");
+            // logger.info("Entering if else statement");
             // Only the new url is compared in the seed (i.e. sourceUrl is not compared)
             if (this.queue.contains(newSeed)) {
-                logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));
+                // logger.info(getFormattedMessage(String.format("skipping as queue already has %s", rootUrl)));
             } else {
                 this.queue.add(newSeed);
-                logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
+                // logger.info(getFormattedMessage(String.format("extract root url instead %s", rootUrl)));
             }
         }
 
-        logger.info(getFormattedMessage("Getting out from handle404................"));
+        // logger.info(getFormattedMessage("Getting out from handle404................"));
     }
 
     // Returns all the urls in the html page given.
     // The urls are the ones enclosed in <a> tag.
     private List<String> getUrls(HtmlPage page) {
-        logger.info(getFormattedMessage("extracting urls..."));
+        // logger.info(getFormattedMessage("extracting urls..."));
 
         // Extracts urls in all the <a> tags.
         List<Object> anchors = (List<Object>) page.getByXPath("//a");
@@ -188,9 +188,9 @@ public class Crawler extends CustomThread {
     // Write the new urls found to the queue if the tree does not already contain
     // the url given.
     private void processUrls(String searchUrl, List<String> urls) {
-        logger.info(getFormattedMessage("processing urls..."));
+        // logger.info(getFormattedMessage("processing urls..."));
 
-        int count = 0;
+        // int count = 0;
 
         for (String url : urls) {
             // Add the url if it is a valid url and the tree does not already contain the
@@ -202,11 +202,11 @@ public class Crawler extends CustomThread {
             Seed seed = new Seed(searchUrl, url);
             if (isValidUrl(url) && !tree.isDuplicate(url) && !queue.contains(seed)) {
                 queue.add(seed);
-                count++;
+                // count++;
             }
         }
 
-        logger.info(getFormattedMessage(String.format("%d urls are new", count)));
+        // logger.info(getFormattedMessage(String.format("%d urls are new", count)));
     }
 
     // Checks if the url is a http link

@@ -117,16 +117,15 @@ public class App implements Callable<Void> {
         Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
         Logger.getLogger("org.apache.commons.httpclient").setLevel(Level.OFF);
 
-        try {
-            // Configure logger to write to external log file
-            // TODO: Should this be removed? As the log file can be very large if run for the whole day.
-            FileHandler handler = new FileHandler("./log.txt");
-            SimpleFormatter formatter = new SimpleFormatter();
-            handler.setFormatter(formatter);
-            Logger.getLogger("").addHandler(handler);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     // Configure logger to write to external log file
+        //     FileHandler handler = new FileHandler("./log.txt");
+        //     SimpleFormatter formatter = new SimpleFormatter();
+        //     handler.setFormatter(formatter);
+        //     Logger.getLogger("").addHandler(handler);
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
     }    
 
     public List<Crawler> getCrawlers(List<Semaphore> crawlerSemaphores, List<Semaphore> builderSemaphores) {
