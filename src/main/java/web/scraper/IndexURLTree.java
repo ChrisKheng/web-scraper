@@ -149,8 +149,9 @@ public class IndexURLTree {
                             RandomAccessFile sFile = new RandomAccessFile(path.toString(), "r");
                             String str;
                             while ((str = sFile.readLine()) != null) {
-                                if(str.contains(" --> ") && str.contains(" : "))
-                                writer.append(str + "\n");
+                                if(str.contains(" --> ") && str.contains(" : ")) {
+                                    writer.append(str + "\n");
+                                }
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
