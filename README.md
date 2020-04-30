@@ -1,6 +1,9 @@
 # README
 ## Notes
-The **total number of new URLs found (crawled or not crawled)** are equal to the total number of URLs in `res.txt` **and** `res2.txt`, which is equivalent to the total number of lines in `res.txt` and `res2.txt`.
+The **total number of new URLs found (crawled or not crawled)** are equal to the total number of URLs in `res.txt` **and** `res2.txt`, which is equivalent to the total number of lines in `res.txt` and `res2.txt`. Note that for `res2.txt`, the total number of lines should be subtracted by 1 to exclude the title of res2.txt. The summary of the calculation of the total number of new URLs found is as follow:
+
+**Total number of new URLs (crawled or not crawled)**
+= Total number of lines in res.txt + Total number of lines in res2.txt - 1
 
 ## Execution
 To run the program:
