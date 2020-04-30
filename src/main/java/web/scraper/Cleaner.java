@@ -84,10 +84,7 @@ public class Cleaner extends Thread {
             writer.write(String.format("Total size: %d\n", this.set.size()));
 
             for (Seed seed : this.set) {
-                String line = seed.getNewUrl() + " --> " + seed.getSourceUrl();
-                line = line.replace("\n", "\\n").replace("\r", "\\r");
-                line = line + "\n";
-                writer.write(line);
+                writer.write(seed.getNewUrl() + " --> " + seed.getSourceUrl());
             }
 
             writer.close();
