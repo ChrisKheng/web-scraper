@@ -212,9 +212,7 @@ public class Crawler extends CustomThread {
     // Checks if the url is a http link
     // Removes other links like javascript and mailto
     private boolean isValidUrl(String url) {
-        if (url.substring(0, 4).equals("http"))
-            return true;
-        else
-            return false;
+        return url.substring(0, 4).equals("http")
+            && !url.contains(" ") && !url.contains("\n") && !url.contains("\r");
     }
 }
