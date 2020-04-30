@@ -83,7 +83,7 @@ public class Cleaner extends Thread {
             writer.write("................. Remaining new URLs in queues that has not been crawled ............\n");
 
             for (Seed seed : this.set) {
-                writer.write(seed.getNewUrl() + " --> " + seed.getSourceUrl());
+                writer.write(seed.getNewUrl() + " --> " + seed.getSourceUrl() + "\n");
             }
 
             writer.close();
