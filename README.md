@@ -1,13 +1,16 @@
-# ReadMe
+# README
+## Notes
+The **total number of new URLs found (crawled or not crawled)** are equal to the total number of URLs in `res.txt` **and** `res2.txt`, which is equivalent to the total number of lines in `res.txt` and `res2.txt`.
+
+## Execution
 To run the program:
 1. Place `seed.txt` into `build/libs` folder.
 2. In root directory, run `bash run-jar.sh`.
-* This will build the jar file and run the program as a jar executable.
-* To buld the jar only, run `./gradlew shadowJar`. You can then access the jar file in `build/libs` folder.
+* This will build the jar files using Gradle and run the program as a jar executable.
 
-To create the jars only (cawler.jar and merger.jar)
+To create the jar files only (cawler.jar and merger.jar)
 * `bash create_jars.sh`
-* You can then find the created jars in `build/libs` folder.
+* You can then find the created jar files in `build/libs` folder.
 
 To view bug replay in branch part3_a and part3_b
 * Run the program as explained above using the seed file 'seed_p3.txt'
