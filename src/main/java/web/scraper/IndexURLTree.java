@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -145,8 +146,12 @@ public class IndexURLTree {
                 .filter((f) -> f.endsWith(SOURCE_FILENAME))
                 .forEach((path) -> {
                         try {
-                            String output = new String(Files.readAllBytes(path));
-                            writer.append(output);
+                            RandomAccessFile sFile = new RandomAccessFile(path.toString(), "r");
+                            String str;
+                            while ((str = sFile.readLine()) != null) {
+                                if(str.contains(" --> ") && str.contains(" : "))
+                                writer.append(str + "\n");
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
