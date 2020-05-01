@@ -11,7 +11,7 @@ To run the program:
 2. In root directory, run `bash run-jar.sh`.
 * This will build the jar files using Gradle and run the program as a jar executable.
 
-To create the jar files only (cawler.jar and merger.jar)
+To create the jar files only (crawler.jar and merger.jar)
 * `bash create_jars.sh`
 * You can then find the created jar files in `build/libs` folder.
 
