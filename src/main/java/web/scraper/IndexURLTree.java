@@ -153,6 +153,7 @@ public class IndexURLTree {
                                     writer.append(str + "\n");
                                 }
                             }
+                            sFile.close();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
