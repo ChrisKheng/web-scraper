@@ -109,6 +109,7 @@ public class Crawler extends CustomThread {
             }
         }
 
+        this.client.close();
         logger.info(getFormattedMessage("exiting.............."));
     }
 
