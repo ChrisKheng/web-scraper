@@ -122,14 +122,8 @@ public class IndexURLTree {
      */
     public boolean isDuplicate(String url) {
         String path = getPathFromUrl(url);
-
         File f = new File(path);
-
         boolean exist = f.exists();
-
-        if (exist) {
-            System.out.printf("Exist ............\n%s\n", path);
-        }
 
         return exist;
     }
