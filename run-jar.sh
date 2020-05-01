@@ -11,4 +11,4 @@ rm -r data
 cd build/libs
 
 # Run the jar file
-java -jar crawler.jar -time 1h -input seed.txt -output res.txt
+java -jar crawler.jar -time 1h -input seed.txt -output res.txt -storedPageNum 1000
