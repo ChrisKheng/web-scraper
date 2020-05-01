@@ -55,7 +55,7 @@ shadowJar {
 }
 
 task shadowJar2(type: Jar, dependsOn: shadowJar) {
-  archiveName = 'cawler.jar'
+  archiveName = 'crawler.jar'
   manifest {
       attributes('Main-Class': 'web.scraper.App')
   }
